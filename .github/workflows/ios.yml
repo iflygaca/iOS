@@ -209,7 +209,7 @@ jobs:
           KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
 
           case "${{ matrix.scheme }}" in
-            FlyGACA) PROFILE_B64="${PROFILE_FLYGACA_B64:-${PROFILE_ELPT_B64:-}}" ;;
+            FlyGACA) PROFILE_B64="${PROFILE_FLYGACA_B64:-}" ;;
             ELPT)    PROFILE_B64="${PROFILE_ELPT_B64:-}" ;;
             AIP)     PROFILE_B64="${PROFILE_AIP_B64:-}" ;;
             *) echo "Unknown scheme ${{ matrix.scheme }}" >&2; exit 1 ;;
