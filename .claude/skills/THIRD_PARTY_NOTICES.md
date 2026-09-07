@@ -59,3 +59,27 @@ portal — do not "harden" it by editing the entitlements.
 
 `performing-ios-app-security-assessment` and `testing-mobile-api-authentication` are written for
 penetration-testing engagements. Use them **only against this project's own apps and backends**.
+
+## Humanizer (blader) — *Added 2026-09-07*
+
+- **Project:** Humanizer — rewrites AI-sounding prose to read like a person wrote it, without
+  changing what it says
+- **Author:** blader (Siqi Chen)
+- **Source:** https://github.com/blader/humanizer
+- **License:** MIT (upstream `LICENSE` retained)
+- **Pinned upstream commit:** `9862685f575c65a8247f90369951df1b3416e3d6` (v3.0.0)
+- **Skill vendored:** `humanizer` — the whole upstream repo, a single self-contained `SKILL.md`
+  with no bundled scripts or assets
+
+**Where it applies here:** `docs/RUNBOOK-ios-*.md`, `ROADMAP.md`, `CAUSE.md`,
+`THE-BOOK-OF-FLY-GACA.md`, and App Store listing copy drafted for the per-app metadata repos
+(paired with the `aso-audit` skill). Do not run it over `apple/Scripts/html-render/captions.js`
+marketing copy without checking screen-fidelity constraints, and never over code comments,
+`project.yml`, or any Swift source — this skill changes prose only.
+
+### Updating from upstream
+
+`.claude/settings.json` registers `blader/humanizer` as a Claude Code marketplace, so
+`/plugin install humanizer@humanizer` pulls upstream's latest version for comparison. It is
+**registered but not enabled**, matching the convention above: enabling it alongside the vendored
+copy would put two skills named `humanizer` on the path.

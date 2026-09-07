@@ -60,9 +60,10 @@ retirement (2026-08) they are the real source, edited here.
 **ios-release** (builds, signing, TestFlight, CI, screenshots); `agents/README.md` says when each
 is the right one. `.claude/skills/` holds five vendored Apache-2.0 cybersecurity skills curated
 for this repo's real security surface — Ed25519 corpus signing, artifact code signing, GitHub
-Actions hardening, iOS app assessment and mobile API auth — with provenance, the pinned upstream
+Actions hardening, iOS app assessment and mobile API auth — plus a vendored MIT skill,
+`humanizer`, for de-AI-ing prose in docs and App Store copy — with provenance, the pinned upstream
 commit and the guardrails in `.claude/skills/THIRD_PARTY_NOTICES.md`. `.claude/settings.json`
-registers the upstream skills marketplace (registered, not enabled).
+registers the upstream skills marketplaces (registered, not enabled).
 
 One caveat on cross-repo links: the monorepo lost its `docs/` tree in 2026-08, so pointers from
 here into `ay2m/FlyGACA/docs/…` (e.g. `APPS-FAMILY-ROADMAP.md`, referenced from `ROADMAP.md`) no
