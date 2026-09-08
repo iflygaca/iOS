@@ -5,62 +5,77 @@ struct HeaderHUDView: View {
     let onVoiceModeTap: () -> Void
     
     var body: some View {
-        VStack(spacing: 8) {
-            HStack(alignment: .center) {
-                // Captain Adel Badge & Title
-                HStack(spacing: 12) {
+        VStack(spacing: 0) {
+            // Main Cockpit Header
+            HStack(alignment: .center, spacing: 12) {
+                // Captain Adel Avatar & Callsign Badge
+                HStack(spacing: 10) {
                     ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.cyan],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(AvionicsTheme.teal, lineWidth: 1.5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(AvionicsTheme.panel2)
                             )
                             .frame(width: 44, height: 44)
-                            .shadow(color: .blue.opacity(0.4), radius: 6, x: 0, y: 3)
                         
-                        Image(systemName: "airplane.circle.fill")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.white)
+                        Image.captainAvatar
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 38, height: 38)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 6) {
-                            Text(currentLanguage == .arabic ? "كابتن عادل" : "Captain Adel")
-                                .font(.system(size: 19, weight: .heavy, design: .rounded))
-                                .foregroundColor(.primary)
+                            Text(currentLanguage == .arabic ? "كابتن عادل" : "CAPT. ADEL")
+                                .font(.system(size: 16, weight: .black, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.ink)
                             
-                            // Verification Badge
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                            // Callsign Tag
+                            Text("ADEL-1")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(AvionicsTheme.cyan.opacity(0.15))
+                                .foregroundColor(AvionicsTheme.cyan)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1)
+                                )
                         }
                         
-                        Text(currentLanguage == .arabic ? "مدرب الطيران الذكي • GACAR RAG" : "Saudi AI Flight Instructor • GACAR RAG")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.secondary)
+                        HStack(spacing: 4) {
+                            PulsingDotView(color: AvionicsTheme.mint, size: 6)
+                            Text(currentLanguage == .arabic ? "مدرّب طيران ذكي • متصل" : "AI FLIGHT INSTRUCTOR · ONLINE")
+                                .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.mint)
+                        }
                     }
                 }
                 
                 Spacer()
                 
-                // Right Controls: Voice button + Language Switcher
+                // Right Controls: Comms Voice + Language Switcher
                 HStack(spacing: 8) {
                     Button(action: onVoiceModeTap) {
                         ZStack {
-                            Circle()
-                                .fill(Color.blue.opacity(0.15))
-                                .frame(width: 38, height: 38)
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(AvionicsTheme.panel2)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(AvionicsTheme.line, lineWidth: 1)
+                                )
+                                .frame(width: 36, height: 32)
+                            
                             Image(systemName: "waveform.and.mic")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(.blue)
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(AvionicsTheme.cyan)
                         }
                     }
                     .buttonStyle(.plain)
                     
-                    // Language Switcher Menu
+                    // Language Toggle
                     Menu {
                         ForEach(AppLanguage.allCases) { lang in
                             Button(action: {
@@ -78,57 +93,95 @@ struct HeaderHUDView: View {
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            Text(currentLanguage.flagEmoji)
-                                .font(.subheadline)
-                            Text(currentLanguage == .arabic ? "عربي" : "EN")
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.primary)
+                            Text(currentLanguage == .arabic ? "🇸🇦 عادل" : "🇺🇸 EN")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.ink)
                             Image(systemName: "chevron.down")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundColor(AvionicsTheme.inkDim)
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
                         .background(
-                            Capsule()
-                                .fill(.ultraThinMaterial)
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(AvionicsTheme.panel2)
                                 .overlay(
-                                    Capsule()
-                                        .stroke(Color.primary.opacity(0.12), lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(AvionicsTheme.line, lineWidth: 1)
                                 )
                         )
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(AvionicsTheme.bg)
             
-            // Cockpit RAG Status Bar
-            HStack(spacing: 12) {
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 7, height: 7)
-                        .shadow(color: .green, radius: 4)
-                    Text("GACAR v2026 Engine")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundColor(.green)
-                }
+            // Cockpit Telemetry Grid Ribbon (Exact match to captadel.com)
+            HStack(spacing: 0) {
+                telemetryCell(
+                    label: currentLanguage == .arabic ? "الإسناد" : "GROUNDING",
+                    val: currentLanguage == .arabic ? "مفعّل" : "ARMED",
+                    color: AvionicsTheme.mint
+                )
                 
-                Spacer()
+                Divider()
+                    .background(AvionicsTheme.line)
+                    .frame(height: 24)
                 
-                HStack(spacing: 4) {
-                    Image(systemName: "doc.text.magnifyingglass")
-                        .font(.system(size: 9))
-                    Text("74 Parts Grounded")
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                }
-                .foregroundColor(.secondary)
+                telemetryCell(
+                    label: currentLanguage == .arabic ? "المرجع" : "CORPUS",
+                    val: "GACAR 74",
+                    color: AvionicsTheme.cyan
+                )
+                
+                Divider()
+                    .background(AvionicsTheme.line)
+                    .frame(height: 24)
+                
+                telemetryCell(
+                    label: currentLanguage == .arabic ? "القاعدة" : "BASE",
+                    val: "OERK · RIYADH",
+                    color: AvionicsTheme.amber
+                )
+                
+                Divider()
+                    .background(AvionicsTheme.line)
+                    .frame(height: 24)
+                
+                telemetryCell(
+                    label: currentLanguage == .arabic ? "المبدأ" : "DOCTRINE",
+                    val: "CITE/REFUSE",
+                    color: AvionicsTheme.ink
+                )
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 4)
-            .background(Color.primary.opacity(0.03))
+            .frame(height: 38)
+            .background(AvionicsTheme.panel)
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(AvionicsTheme.line),
+                alignment: .top
+            )
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(AvionicsTheme.line),
+                alignment: .bottom
+            )
         }
-        .background(.ultraThinMaterial)
+    }
+    
+    private func telemetryCell(label: String, val: String, color: Color) -> some View {
+        VStack(spacing: 1) {
+            Text(label)
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(AvionicsTheme.inkDim)
+                .tracking(0.8)
+            Text(val)
+                .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                .foregroundColor(color)
+        }
+        .frame(maxWidth: .infinity)
     }
 }

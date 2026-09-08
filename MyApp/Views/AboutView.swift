@@ -6,168 +6,242 @@ struct AboutView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Hero Card
-                    VStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.blue, .cyan],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 80, height: 80)
-                                .shadow(color: .blue.opacity(0.3), radius: 10)
+            ZStack {
+                AvionicsTheme.bg.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        // Hero Portrait Card
+                        VStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(AvionicsTheme.teal, lineWidth: 2)
+                                    .frame(width: 100, height: 100)
+                                
+                                Image.captainPortrait
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 96, height: 96)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                            }
                             
-                            Image(systemName: "airplane")
-                                .font(.system(size: 40, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                        
-                        Text(currentLanguage == .arabic ? "كابتن عادل (Captain Adel)" : "Captain Adel")
-                            .font(.system(size: 24, weight: .heavy, design: .rounded))
-                        
-                        Text(currentLanguage == .arabic ? "مدرب الطيران الذكي ومستشارك في لوائح الطيران المدني (GACAR)" : "Bilingual AI Flight Instructor & Saudi Aviation Regulatory Assistant")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        
-                        HStack(spacing: 8) {
-                            badgePill("Fly GACA", icon: "paperplane.fill", color: .blue)
-                            badgePill("HuggingFace CaptAdel", icon: "cpu", color: .purple)
-                            badgePill("v1.0.0", icon: "tag.fill", color: .green)
-                        }
-                    }
-                    .padding(20)
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.blue.opacity(0.06))
-                    )
-                    
-                    // Model Architecture Card
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "cpu.fill")
-                                .foregroundColor(.purple)
-                            Text(currentLanguage == .arabic ? "النموذج ومحرك RAG" : "AI & RAG Model Architecture")
-                                .font(.headline)
-                        }
-                        
-                        Text(currentLanguage == .arabic ?
-                             "كابتن عادل يعتمد على نموذج الاسترجاع الثنائي اللغة (CaptAdel) المنشور على Hugging Face (flygaca/CaptAdel)، والذي تم تدريبه خصيصاً على استرجاع واستخراج مواد لوائح GACAR الـ 74، وأدلة الطيران السعودية والـ FAA." :
-                             "Captain Adel is powered by the bilingual (Arabic / English) embedding model flygaca/CaptAdel hosted on Hugging Face. Fine-tuned on all 74 GACAR Parts and aviation handbooks for accurate semantic retrieval.")
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
-                            .lineSpacing(4)
-                        
-                        Button(action: {
-                            if let url = URL(string: "https://huggingface.co/flygaca/CaptAdel") {
-                                openURL(url)
+                            VStack(spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Text(currentLanguage == .arabic ? "كابتن عادل" : "CAPTAIN ADEL")
+                                        .font(.system(size: 20, weight: .heavy, design: .monospaced))
+                                        .foregroundColor(AvionicsTheme.ink)
+                                    Text("ADEL-1")
+                                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(AvionicsTheme.cyan.opacity(0.15))
+                                        .foregroundColor(AvionicsTheme.cyan)
+                                        .cornerRadius(3)
+                                }
+                                
+                                Text(currentLanguage == .arabic ? "مدرّب الطيران الذكي للوائح الطيران المدني السعودي (GACAR)" : "AI Flight Instructor for Saudi Civil Aviation (GACAR)")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(AvionicsTheme.teal)
+                                    .multilineTextAlignment(.center)
                             }
-                        }) {
+                            
+                            HStack(spacing: 8) {
+                                badgePill("Fly GACA", icon: "paperplane.fill", color: AvionicsTheme.cyan)
+                                badgePill("CaptAdel AI", icon: "cpu", color: AvionicsTheme.mint)
+                                badgePill("OERK Base", icon: "location.fill", color: AvionicsTheme.amber)
+                            }
+                        }
+                        .padding(18)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(AvionicsTheme.panel)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(AvionicsTheme.line, lineWidth: 1)
+                                )
+                        )
+                        
+                        // captadel.com Doctrine Card: "Cite or Refuse"
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Image(systemName: "arrow.up.right.square.fill")
-                                Text(currentLanguage == .arabic ? "عرض نموذج CaptAdel على HuggingFace" : "View flygaca/CaptAdel on HuggingFace")
+                                Image(systemName: "quote.opening")
+                                    .foregroundColor(AvionicsTheme.cyan)
+                                Text(currentLanguage == .arabic ? "عقيدة كابتن عادل (THE DOCTRINE)" : "THE DOCTRINE // CITE OR REFUSE")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.cyan)
                             }
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.purple)
+                            
+                            Text(currentLanguage == .arabic ?
+                                 "«عالم الطيران لا يحتمل التخمين الواثق. يبحث النظام برمجياً في نصوص لوائح GACAR الـ 74 كاملة، وتُسلّم المواد المسترجعة للنموذج، ليجيب عادل منها حصراً. وإذا لم تدعم اللائحة الإجابة، فإنه يعتذر صراحة بدلاً من أن يبتدع إجابة من عنده.»" :
+                                 "“Aviation is no place for confident guessing. Retrieval runs in code over the GACAR corpus, the cited passages are handed to the model, and Adel answers only from them. If the corpus can't support the question, he says so — cite or refuse, every time.”")
+                                .font(.system(size: 13))
+                                .foregroundColor(AvionicsTheme.ink)
+                                .lineSpacing(4)
                         }
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.purple.opacity(0.05))
-                    )
-                    
-                    // General Disclaimer Section
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                            Text(currentLanguage == .arabic ? "إخلاء مسؤولية مهم" : "Important Legal Disclaimer")
-                                .font(.headline)
-                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(AvionicsTheme.panel2)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(AvionicsTheme.teal.opacity(0.4), lineWidth: 1)
+                                )
+                        )
                         
-                        Text(currentLanguage == .arabic ?
-                             "منصة Fly GACA تطبيق مستقل وغير تابعة للهيئة العامة للطيران المدني (GACA). التطبيق مصمم لأغراض التعليم والدراسة الأرضية فقط ولا يجب الاعتماد عليه كمرجع عملي نهائي أثناء الطيران. للحصول على اللوائح والنشرات الرسمية يرجى زيارة gaca.gov.sa." :
-                             "Fly GACA and Captain Adel are independent educational projects not officially affiliated with or operated by the General Authority of Civil Aviation (GACA). For operational decisions, always refer directly to official publications at gaca.gov.sa.")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                            .lineSpacing(4)
-                        
-                        Button(action: {
-                            if let url = URL(string: "https://gaca.gov.sa") {
-                                openURL(url)
-                            }
-                        }) {
+                        // Model Architecture Card (Hugging Face)
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Image(systemName: "link")
-                                Text(currentLanguage == .arabic ? "زيارة موقع GACA الرسمي" : "Visit Official GACA Website (gaca.gov.sa)")
+                                Image(systemName: "cpu.fill")
+                                    .foregroundColor(AvionicsTheme.mint)
+                                Text(currentLanguage == .arabic ? "النموذج ومحرك الاسترجاع (RAG)" : "AI & EMBEDDINGS ARCHITECTURE")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.mint)
                             }
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.orange)
+                            
+                            Text(currentLanguage == .arabic ?
+                                 "يعتمد كابتن عادل على نموذج الاسترجاع الثنائي اللغة flygaca/CaptAdel المنشور على Hugging Face، والمُدرّب خصيصاً على نصوص لوائح الطيران المدني السعودي والخرائط الجوية." :
+                                 "Powered by the bilingual (Arabic/English) flygaca/CaptAdel embeddings model hosted on Hugging Face. Fine-tuned on all 74 GACAR Parts and aviation handbooks for accurate semantic retrieval.")
+                                .font(.system(size: 12.5))
+                                .foregroundColor(AvionicsTheme.inkDim)
+                                .lineSpacing(3)
+                            
+                            Button(action: {
+                                if let url = URL(string: "https://huggingface.co/flygaca/CaptAdel") {
+                                    openURL(url)
+                                }
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.up.right.square")
+                                    Text(currentLanguage == .arabic ? "عرض flygaca/CaptAdel على Hugging Face" : "VIEW flygaca/CaptAdel ON HUGGING FACE")
+                                }
+                                .font(.system(size: 10.5, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.cyan)
+                            }
+                            .padding(.top, 2)
                         }
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.orange.opacity(0.06))
-                    )
-                    
-                    // App Preferences
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(currentLanguage == .arabic ? "إعدادات التطبيق" : "App Preferences")
-                            .font(.headline)
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(AvionicsTheme.panel)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(AvionicsTheme.line, lineWidth: 1)
+                                )
+                        )
                         
-                        HStack {
-                            Text(currentLanguage == .arabic ? "لغة التطبيق" : "App Language")
-                            Spacer()
-                            Picker("", selection: $currentLanguage) {
-                                ForEach(AppLanguage.allCases) { lang in
-                                    Text("\(lang.flagEmoji) \(lang.displayName)").tag(lang)
+                        // Legal Disclaimer Card
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(AvionicsTheme.amber)
+                                Text(currentLanguage == .arabic ? "إخلاء مسؤولية مهم" : "OFFICIAL REGULATORY DISCLAIMER")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.amber)
+                            }
+                            
+                            Text(currentLanguage == .arabic ?
+                                 "كابتن عادل مشروع تعليمي مستقل وغير تابع رسمياً للهيئة العامة للطيران المدني (GACA). التطبيق مخصص للتعليم والدراسة الأرضية فقط. المرجع الرسمي لكافة اللوائح والتعاميم هو gaca.gov.sa." :
+                                 "Captain Adel and Fly GACA are independent educational initiatives not officially affiliated with the General Authority of Civil Aviation (GACA). For operational flight decisions, always consult official publications at gaca.gov.sa.")
+                                .font(.system(size: 12))
+                                .foregroundColor(AvionicsTheme.inkDim)
+                                .lineSpacing(3)
+                            
+                            Button(action: {
+                                if let url = URL(string: "https://gaca.gov.sa") {
+                                    openURL(url)
+                                }
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "link")
+                                    Text(currentLanguage == .arabic ? "زيارة موقع GACA الرسمي" : "OFFICIAL GACA WEBSITE (gaca.gov.sa)")
+                                }
+                                .font(.system(size: 10.5, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.amber)
+                            }
+                            .padding(.top, 2)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(AvionicsTheme.panel)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(AvionicsTheme.amber.opacity(0.4), lineWidth: 1)
+                                )
+                        )
+                        
+                        // App Preferences
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(currentLanguage == .arabic ? "إعدادات اللغة والمصدر" : "SYSTEM PREFERENCES")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
+                            
+                            HStack {
+                                Text(currentLanguage == .arabic ? "لغة الواجهة" : "Primary Language")
+                                    .font(.system(size: 13, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.ink)
+                                Spacer()
+                                Picker("", selection: $currentLanguage) {
+                                    ForEach(AppLanguage.allCases) { lang in
+                                        Text("\(lang.flagEmoji) \(lang.displayName)").tag(lang)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                            }
+                            
+                            Divider().background(AvionicsTheme.line)
+                            
+                            HStack {
+                                Text("WEBSITE")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.inkDim)
+                                Spacer()
+                                Button(action: {
+                                    if let url = URL(string: "https://captadel.com") {
+                                        openURL(url)
+                                    }
+                                }) {
+                                    Text("captadel.com ↗")
+                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                        .foregroundColor(AvionicsTheme.cyan)
                                 }
                             }
-                            .pickerStyle(.menu)
                         }
-                        
-                        Divider()
-                        
-                        HStack {
-                            Text(currentLanguage == .arabic ? "صناعة في السعودية" : "Made in KSA")
-                                .font(.subheadline)
-                            Spacer()
-                            Text("🇸🇦 صنع في السعودية")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.secondary)
-                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(AvionicsTheme.panel)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(AvionicsTheme.line, lineWidth: 1)
+                                )
+                        )
                     }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.primary.opacity(0.03))
-                    )
+                    .padding(14)
                 }
-                .padding(16)
             }
-            .navigationTitle(currentLanguage == .arabic ? "عن التطبيق" : "About Captain Adel")
+            .navigationTitle(currentLanguage == .arabic ? "عن كابتن عادل" : "DOCTRINE & ABOUT")
+            .navigationBarTitleDisplayMode(.inline)
         }
+        .preferredColorScheme(.dark)
         .environment(\.layoutDirection, currentLanguage.isRTL ? .rightToLeft : .leftToRight)
     }
     
     private func badgePill(_ text: String, icon: String, color: Color) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 10))
+                .font(.system(size: 8))
             Text(text)
-                .font(.system(size: 11, weight: .bold))
+                .font(.system(size: 9.5, weight: .bold, design: .monospaced))
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(Capsule().fill(color.opacity(0.12)))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(color.opacity(0.12))
         .foregroundColor(color)
+        .overlay(
+            RoundedRectangle(cornerRadius: 3)
+                .stroke(color.opacity(0.3), lineWidth: 1)
+        )
     }
 }

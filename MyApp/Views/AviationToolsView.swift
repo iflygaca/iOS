@@ -8,7 +8,7 @@ struct AviationToolsView: View {
     @State private var selectedAirport: METARReport = METARService.saudiAirports[0]
     
     // Quiz & Flashcard state
-    @State private var studyMode: StudyMode = .quiz // .quiz or .flashcard
+    @State private var studyMode: StudyMode = .quiz
     @State private var selectedQuizCategory: GACARCategory? = nil
     @State private var currentQuestionIndex: Int = 0
     @State private var selectedAnswerIndex: Int? = nil
@@ -44,67 +44,111 @@ struct AviationToolsView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Segmented Control Header
-                Picker("", selection: $selectedToolTab) {
-                    Text(currentLanguage == .arabic ? "طقس METAR" : "METAR Weather").tag(0)
-                    Text(currentLanguage == .arabic ? "الاختبار والبطاقات" : "Quiz & Flashcards").tag(1)
-                    Text(currentLanguage == .arabic ? "الحاسبات" : "Calculators").tag(2)
+                // Header Telemetry Bar
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(currentLanguage == .arabic ? "أدوات الطيار وتجهيز الاختبارات" : "COCKPIT AVIONICS & EXAM PREP")
+                            .font(.system(size: 13, weight: .black, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        Text(currentLanguage == .arabic ? "بيانات حية ومحاكاة عمليات" : "Live METAR, FMC Calculators, GACAR Q&A")
+                            .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.teal)
+                    }
+                    Spacer()
+                    Image(systemName: "gauge.with.needle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(AvionicsTheme.cyan)
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(AvionicsTheme.panel)
+                .overlay(
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundColor(AvionicsTheme.line),
+                    alignment: .bottom
+                )
+
+                // Tactical Mode Segmented Switcher
+                HStack(spacing: 0) {
+                    modeTabButton(title: currentLanguage == .arabic ? "طقس METAR" : "METAR", index: 0)
+                    modeTabButton(title: currentLanguage == .arabic ? "اختبار وبطاقات" : "PREP & FLASH", index: 1)
+                    modeTabButton(title: currentLanguage == .arabic ? "حاسبات FMC" : "FMC CALCS", index: 2)
+                }
+                .padding(6)
+                .background(AvionicsTheme.panel2)
+                .overlay(
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundColor(AvionicsTheme.line),
+                    alignment: .bottom
+                )
 
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: 16) {
                         if selectedToolTab == 0 {
-                            metarWeatherSection
+                            cockpitMetarSection
                         } else if selectedToolTab == 1 {
-                            quizAndFlashcardsSection
+                            cockpitQuizAndFlashcardsSection
                         } else {
-                            calculatorsSection
+                            cockpitCalculatorsSection
                         }
                     }
-                    .padding(16)
+                    .padding(14)
                 }
+                .background(AvionicsTheme.bg)
             }
-            .navigationTitle(currentLanguage == .arabic ? "أدوات الطيران والاختبارات" : "Aviation Tools & Prep")
+            .background(AvionicsTheme.bg)
         }
+        .preferredColorScheme(.dark)
         .environment(\.layoutDirection, currentLanguage.isRTL ? .rightToLeft : .leftToRight)
     }
 
-    // MARK: - 1. METAR Weather Section
-    private var metarWeatherSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(currentLanguage == .arabic ? "اختر المطار لمشاهدة التقرير الجوي (METAR)" : "Select Saudi Airport METAR")
-                .font(.headline)
+    private func modeTabButton(title: String, index: Int) -> some View {
+        Button(action: { selectedToolTab = index }) {
+            Text(title)
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(selectedToolTab == index ? AvionicsTheme.bg : AvionicsTheme.inkDim)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(selectedToolTab == index ? AvionicsTheme.cyan : Color.clear)
+                )
+        }
+    }
+
+    // MARK: - 1. Cockpit METAR Weather Section
+    private var cockpitMetarSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(currentLanguage == .arabic ? "اختر المطار لمشاهدة التقرير الجوي (METAR)" : "SELECT SAUDI AERODROME METAR")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(AvionicsTheme.inkDim)
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     ForEach(METARService.saudiAirports) { airport in
                         Button(action: {
                             withAnimation {
                                 selectedAirport = airport
                             }
                         }) {
-                            VStack(spacing: 4) {
+                            VStack(spacing: 3) {
                                 Text(airport.icaoCode)
-                                    .font(.system(size: 15, weight: .bold, design: .monospaced))
+                                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    .foregroundColor(selectedAirport.icaoCode == airport.icaoCode ? AvionicsTheme.cyan : AvionicsTheme.ink)
                                 Text(airport.flightCategory.rawValue)
-                                    .font(.caption2.weight(.black))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(airport.flightCategory.color)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(4)
+                                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                                    .foregroundColor(airport.flightCategory.color)
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
                             .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(selectedAirport.icaoCode == airport.icaoCode ? Color.blue.opacity(0.15) : Color.primary.opacity(0.04))
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(selectedAirport.icaoCode == airport.icaoCode ? AvionicsTheme.panel2 : AvionicsTheme.panel)
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(selectedAirport.icaoCode == airport.icaoCode ? Color.blue : Color.clear, lineWidth: 2)
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(selectedAirport.icaoCode == airport.icaoCode ? AvionicsTheme.cyan : AvionicsTheme.line, lineWidth: 1)
                                     )
                             )
                         }
@@ -113,89 +157,105 @@ struct AviationToolsView: View {
                 }
             }
             
-            // Raw METAR Card
-            VStack(alignment: .leading, spacing: 8) {
+            // Raw METAR Terminal Card
+            VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Image(systemName: "cloud.sun.fill")
-                        .foregroundColor(.orange)
+                    Image(systemName: "antenna.radiowaves.left.and.right")
+                        .foregroundColor(AvionicsTheme.cyan)
                     Text(currentLanguage == .arabic ? selectedAirport.airportNameAr : selectedAirport.airportNameEn)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(AvionicsTheme.ink)
                     Spacer()
                     Text(selectedAirport.flightCategory.rawValue)
-                        .font(.system(size: 12, weight: .black))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(selectedAirport.flightCategory.color)
-                        .foregroundColor(.white)
-                        .cornerRadius(6)
+                        .font(.system(size: 10, weight: .black, design: .monospaced))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(selectedAirport.flightCategory.color.opacity(0.2))
+                        .foregroundColor(selectedAirport.flightCategory.color)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 3)
+                                .stroke(selectedAirport.flightCategory.color, lineWidth: 1)
+                        )
                 }
                 
                 Text(selectedAirport.rawText)
-                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                    .foregroundColor(.green)
+                    .font(.system(size: 12.5, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.mint)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.black.opacity(0.85))
-                    .cornerRadius(8)
+                    .background(Color.black.opacity(0.9))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(AvionicsTheme.line, lineWidth: 1)
+                    )
             }
-            .padding(16)
+            .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.primary.opacity(0.03))
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(AvionicsTheme.panel)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(AvionicsTheme.line, lineWidth: 1)
+                    )
             )
             
-            // Decoded Grid
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                weatherDecodedCard(
+            // Decoded Avionics Grid
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                decodedGridCard(
                     icon: "wind",
-                    title: currentLanguage == .arabic ? "الرياح" : "Wind",
+                    title: currentLanguage == .arabic ? "الرياح (WIND)" : "WIND VECTOR",
                     value: selectedAirport.windInfo
                 )
-                weatherDecodedCard(
+                decodedGridCard(
                     icon: "eye.fill",
-                    title: currentLanguage == .arabic ? "الرؤية" : "Visibility",
+                    title: currentLanguage == .arabic ? "الرؤية (VISIBILITY)" : "FLIGHT VISIBILITY",
                     value: selectedAirport.visibility
                 )
-                weatherDecodedCard(
+                decodedGridCard(
                     icon: "thermometer.medium",
-                    title: currentLanguage == .arabic ? "الحرارة / الندى" : "Temp / Dewpt",
+                    title: currentLanguage == .arabic ? "الحرارة / الندى" : "TEMP / DEWPOINT",
                     value: "\(selectedAirport.temperature) / \(selectedAirport.dewPoint)"
                 )
-                weatherDecodedCard(
+                decodedGridCard(
                     icon: "gauge",
-                    title: currentLanguage == .arabic ? "الضغط الجوي" : "Altimeter",
+                    title: currentLanguage == .arabic ? "الضغط (QNH)" : "ALTIMETER (QNH)",
                     value: selectedAirport.altimeter
                 )
             }
         }
     }
     
-    private func weatherDecodedCard(icon: String, title: String, value: String) -> some View {
+    private func decodedGridCard(icon: String, title: String, value: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.blue)
+                .font(.system(size: 16))
+                .foregroundColor(AvionicsTheme.cyan)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.inkDim)
                 Text(value)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.ink)
             }
             Spacer()
         }
-        .padding(12)
+        .padding(10)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.primary.opacity(0.04))
+            RoundedRectangle(cornerRadius: 6)
+                .fill(AvionicsTheme.panel2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(AvionicsTheme.line, lineWidth: 1)
+                )
         )
     }
 
-    // MARK: - 2. Quiz & Flashcards Master Section
-    private var quizAndFlashcardsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Mode Picker: Quiz vs. Flashcards
-            Picker("Study Mode", selection: $studyMode) {
+    // MARK: - 2. Quiz & Flashcards Section
+    private var cockpitQuizAndFlashcardsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // Mode Switcher: Quiz vs. Flashcards
+            Picker("Mode", selection: $studyMode) {
                 ForEach(StudyMode.allCases) { mode in
                     Text(currentLanguage == .arabic ? mode.arabicName : mode.rawValue).tag(mode)
                 }
@@ -209,12 +269,16 @@ struct AviationToolsView: View {
                         selectedQuizCategory = nil
                         resetQuiz()
                     }) {
-                        Text(currentLanguage == .arabic ? "كافة المواد" : "All Topics")
-                            .font(.caption.weight(.bold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Capsule().fill(selectedQuizCategory == nil ? Color.blue : Color.primary.opacity(0.06)))
-                            .foregroundColor(selectedQuizCategory == nil ? .white : .primary)
+                        Text(currentLanguage == .arabic ? "الكل" : "ALL TOPICS")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(selectedQuizCategory == nil ? AvionicsTheme.cyan : AvionicsTheme.panel2)
+                            .foregroundColor(selectedQuizCategory == nil ? AvionicsTheme.bg : AvionicsTheme.inkDim)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(selectedQuizCategory == nil ? AvionicsTheme.cyan : AvionicsTheme.line, lineWidth: 1)
+                            )
                     }
                     
                     ForEach(GACARCategory.allCases) { cat in
@@ -224,14 +288,18 @@ struct AviationToolsView: View {
                         }) {
                             HStack(spacing: 4) {
                                 Image(systemName: cat.iconName)
-                                    .font(.caption2)
+                                    .font(.system(size: 8))
                                 Text(currentLanguage == .arabic ? cat.arabicName : cat.rawValue)
+                                    .font(.system(size: 9.5, weight: .bold, design: .monospaced))
                             }
-                            .font(.caption.weight(.bold))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Capsule().fill(selectedQuizCategory == cat ? Color.blue : Color.primary.opacity(0.06)))
-                            .foregroundColor(selectedQuizCategory == cat ? .white : .primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(selectedQuizCategory == cat ? AvionicsTheme.cyan : AvionicsTheme.panel2)
+                            .foregroundColor(selectedQuizCategory == cat ? AvionicsTheme.bg : AvionicsTheme.inkDim)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(selectedQuizCategory == cat ? AvionicsTheme.cyan : AvionicsTheme.line, lineWidth: 1)
+                            )
                         }
                     }
                 }
@@ -241,17 +309,14 @@ struct AviationToolsView: View {
             
             if questions.isEmpty {
                 Text(currentLanguage == .arabic ? "لا توجد أسئلة لهذه الفئة حالياً." : "No questions available for this category.")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AvionicsTheme.inkDim)
                     .padding()
             } else if quizCompleted {
-                // Quiz Results Summary Card
-                quizResultsSummaryView(totalQuestions: questions.count)
+                cockpitQuizResultsSummaryView(totalQuestions: questions.count)
             } else if studyMode == .quiz {
-                // Exam Quiz Mode
-                renderQuizQuestionView(questions: questions)
+                cockpitQuizQuestionView(questions: questions)
             } else {
-                // Interactive 3D Flashcard Mode
-                renderFlashcardView(questions: questions)
+                cockpitFlashcardView(questions: questions)
             }
         }
     }
@@ -272,45 +337,42 @@ struct AviationToolsView: View {
         isCardFlipped = false
     }
 
-    // MARK: - Quiz Question View
-    private func renderQuizQuestionView(questions: [QuizQuestion]) -> some View {
+    // MARK: - Cockpit Quiz Question View
+    private func cockpitQuizQuestionView(questions: [QuizQuestion]) -> some View {
         let question = questions[min(currentQuestionIndex, questions.count - 1)]
         
-        return VStack(alignment: .leading, spacing: 16) {
+        return VStack(alignment: .leading, spacing: 14) {
             HStack {
-                HStack(spacing: 6) {
-                    Image(systemName: question.category.iconName)
-                    Text(currentLanguage == .arabic ? question.category.arabicName : question.category.rawValue)
-                }
-                .font(.caption.weight(.bold))
-                .foregroundColor(.blue)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Capsule().fill(Color.blue.opacity(0.12)))
+                Text(question.gacarReference)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.cyan)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(AvionicsTheme.cyan.opacity(0.12))
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(AvionicsTheme.cyan.opacity(0.3), lineWidth: 1))
                 
                 Spacer()
                 
-                Text("\(currentLanguage == .arabic ? "سؤال" : "Q") \(currentQuestionIndex + 1)/\(questions.count)")
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundColor(.secondary)
+                Text("Q \(currentQuestionIndex + 1)/\(questions.count)")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.inkDim)
             }
             
-            // Question Card
-            VStack(alignment: .leading, spacing: 10) {
-                Text(question.gacarReference)
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(.blue)
-                
-                Text(currentLanguage == .arabic ? question.questionAr : question.questionEn)
-                    .font(.system(size: 16, weight: .bold))
-                    .lineSpacing(4)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.blue.opacity(0.06))
-            )
+            // Question Statement Card
+            Text(currentLanguage == .arabic ? question.questionAr : question.questionEn)
+                .font(.system(size: 14.5, weight: .bold))
+                .foregroundColor(AvionicsTheme.ink)
+                .lineSpacing(4)
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AvionicsTheme.panel)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AvionicsTheme.line, lineWidth: 1)
+                        )
+                )
             
             // Options
             let options = currentLanguage == .arabic ? question.optionsAr : question.optionsEn
@@ -325,52 +387,57 @@ struct AviationToolsView: View {
                 }) {
                     HStack {
                         Text(options[index])
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.primary)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(AvionicsTheme.ink)
                         Spacer()
                         
                         if showAnswerFeedback {
                             if index == question.correctOptionIndex {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundColor(AvionicsTheme.mint)
                             } else if index == selectedAnswerIndex {
                                 Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.red)
+                                    .foregroundColor(AvionicsTheme.red)
                             }
                         }
                     }
-                    .padding(14)
+                    .padding(12)
                     .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(optionBackgroundColor(for: index, correct: question.correctOptionIndex))
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(cockpitOptionBg(index: index, correct: question.correctOptionIndex))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(optionBorderColor(for: index, correct: question.correctOptionIndex), lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(cockpitOptionBorder(index: index, correct: question.correctOptionIndex), lineWidth: 1)
                             )
                     )
                 }
                 .buttonStyle(.plain)
             }
             
-            // Explanation & Next Button
+            // Explanation & Next Action
             if showAnswerFeedback {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Image(systemName: "lightbulb.fill")
-                            .foregroundColor(.yellow)
-                        Text(currentLanguage == .arabic ? "الشرح والتوضيح:" : "Regulatory Explanation:")
-                            .font(.system(size: 13, weight: .bold))
+                        Image(systemName: "shield.lefthalf.filled")
+                            .foregroundColor(AvionicsTheme.cyan)
+                        Text(currentLanguage == .arabic ? "السند النظامي في GACAR:" : "GACAR REGULATORY GROUNDING:")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.cyan)
                     }
                     
                     Text(currentLanguage == .arabic ? question.explanationAr : question.explanationEn)
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                        .foregroundColor(AvionicsTheme.inkDim)
                         .lineSpacing(3)
                 }
-                .padding(12)
+                .padding(10)
                 .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.primary.opacity(0.04))
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(AvionicsTheme.panel2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(AvionicsTheme.line, lineWidth: 1)
+                        )
                 )
                 
                 Button(action: {
@@ -385,85 +452,86 @@ struct AviationToolsView: View {
                     HStack {
                         Spacer()
                         Text(currentQuestionIndex + 1 < questions.count ?
-                             (currentLanguage == .arabic ? "السؤال التالي" : "Next Question") :
-                             (currentLanguage == .arabic ? "عرض النتيجة النهائي" : "View Final Score"))
-                            .font(.system(size: 15, weight: .bold))
+                             (currentLanguage == .arabic ? "السؤال التالي" : "NEXT QUESTION") :
+                             (currentLanguage == .arabic ? "النتيجة النهائية" : "VIEW SCORE"))
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
                         Image(systemName: "arrow.right")
                         Spacer()
                     }
                     .padding(12)
-                    .background(Capsule().fill(Color.blue))
-                    .foregroundColor(.white)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.cyan))
+                    .foregroundColor(AvionicsTheme.bg)
                 }
             }
         }
     }
 
-    // MARK: - Flashcard View (3D Flip Animation)
-    private func renderFlashcardView(questions: [QuizQuestion]) -> some View {
+    // MARK: - Cockpit Flashcard View (3D Flip)
+    private func cockpitFlashcardView(questions: [QuizQuestion]) -> some View {
         let question = questions[min(currentQuestionIndex, questions.count - 1)]
         
-        return VStack(spacing: 20) {
+        return VStack(spacing: 16) {
             HStack {
-                Text("\(currentLanguage == .arabic ? "بطاقة" : "Card") \(currentQuestionIndex + 1)/\(questions.count)")
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundColor(.secondary)
+                Text("CARD \(currentQuestionIndex + 1)/\(questions.count)")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.inkDim)
                 Spacer()
-                Text(currentLanguage == .arabic ? "اضغط للقلب 🔄" : "Tap card to flip 🔄")
-                    .font(.caption.weight(.semibold))
-                    .foregroundColor(.blue)
+                Text(currentLanguage == .arabic ? "انقر لقلب البطاقة 🔄" : "TAP TO FLIP 🔄")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.cyan)
             }
             
             // 3D Flip Card
             ZStack {
                 if !isCardFlipped {
-                    // Front of Card: Question
+                    // Front of Card
                     VStack(alignment: .leading, spacing: 14) {
                         HStack {
                             Text(question.gacarReference)
                                 .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                .foregroundColor(.blue)
+                                .foregroundColor(AvionicsTheme.cyan)
                             Spacer()
                             Image(systemName: question.category.iconName)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AvionicsTheme.teal)
                         }
                         
                         Text(currentLanguage == .arabic ? question.questionAr : question.questionEn)
-                            .font(.system(size: 18, weight: .bold))
-                            .lineSpacing(6)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(AvionicsTheme.ink)
+                            .lineSpacing(5)
                         
                         Spacer()
                         
                         HStack {
                             Spacer()
-                            Text(currentLanguage == .arabic ? "اضغط لعرض الإجابة والشرح 👈" : "Tap to reveal answer & GACAR rule 👈")
-                                .font(.caption.weight(.bold))
-                                .foregroundColor(.blue)
+                            Text(currentLanguage == .arabic ? "عرض الإجابة والسند 👈" : "REVEAL GACAR CLAUSE 👈")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.cyan)
                         }
                     }
-                    .padding(20)
-                    .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+                    .padding(18)
+                    .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
                     .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.blue.opacity(0.08))
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(AvionicsTheme.panel)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1.5)
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1)
                             )
                     )
                 } else {
-                    // Back of Card: Answer & Explanation
-                    VStack(alignment: .leading, spacing: 12) {
+                    // Back of Card
+                    VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.green)
-                            Text(currentLanguage == .arabic ? "الإجابة الصحيحة:" : "Correct Answer:")
-                                .font(.caption.weight(.bold))
-                                .foregroundColor(.green)
+                                .foregroundColor(AvionicsTheme.mint)
+                            Text(currentLanguage == .arabic ? "الإجابة المعتمدة:" : "CORRECT CLAUSE:")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.mint)
                             Spacer()
                             Text(question.gacarReference)
                                 .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundColor(.blue)
+                                .foregroundColor(AvionicsTheme.cyan)
                         }
                         
                         let correctText = currentLanguage == .arabic ?
@@ -471,24 +539,24 @@ struct AviationToolsView: View {
                         question.optionsEn[question.correctOptionIndex]
                         
                         Text(correctText)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.green)
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(AvionicsTheme.mint)
                         
-                        Divider()
+                        Divider().background(AvionicsTheme.line)
                         
                         Text(currentLanguage == .arabic ? question.explanationAr : question.explanationEn)
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
-                            .lineSpacing(4)
+                            .font(.system(size: 12))
+                            .foregroundColor(AvionicsTheme.inkDim)
+                            .lineSpacing(3)
                     }
-                    .padding(20)
-                    .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
+                    .padding(18)
+                    .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
                     .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.green.opacity(0.08))
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(AvionicsTheme.panel2)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.green.opacity(0.3), lineWidth: 1.5)
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(AvionicsTheme.mint.opacity(0.5), lineWidth: 1)
                             )
                     )
                 }
@@ -501,7 +569,7 @@ struct AviationToolsView: View {
             }
             
             // Navigation Controls
-            HStack(spacing: 20) {
+            HStack(spacing: 16) {
                 Button(action: {
                     if currentQuestionIndex > 0 {
                         isCardFlipped = false
@@ -510,12 +578,13 @@ struct AviationToolsView: View {
                 }) {
                     HStack {
                         Image(systemName: "chevron.left")
-                        Text(currentLanguage == .arabic ? "السابق" : "Previous")
+                        Text(currentLanguage == .arabic ? "السابق" : "PREV")
                     }
-                    .font(.system(size: 14, weight: .bold))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(Color.primary.opacity(0.06)))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.panel2))
+                    .foregroundColor(AvionicsTheme.inkDim)
                 }
                 .disabled(currentQuestionIndex == 0)
                 
@@ -528,128 +597,125 @@ struct AviationToolsView: View {
                     }
                 }) {
                     HStack {
-                        Text(currentLanguage == .arabic ? "التالي" : "Next")
+                        Text(currentLanguage == .arabic ? "التالي" : "NEXT")
                         Image(systemName: "chevron.right")
                     }
-                    .font(.system(size: 14, weight: .bold))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Capsule().fill(Color.blue))
-                    .foregroundColor(.white)
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.cyan))
+                    .foregroundColor(AvionicsTheme.bg)
                 }
                 .disabled(currentQuestionIndex + 1 >= questions.count)
             }
         }
     }
 
-    // MARK: - Quiz Results Summary
-    private func quizResultsSummaryView(totalQuestions: Int) -> some View {
+    // MARK: - Results Summary View
+    private func cockpitQuizResultsSummaryView(totalQuestions: Int) -> some View {
         let percentage = Int((Double(userScore) / Double(totalQuestions)) * 100.0)
         let isPassed = percentage >= 70
         
         return VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(isPassed ? Color.green.opacity(0.15) : Color.red.opacity(0.15))
-                    .frame(width: 90, height: 90)
-                Image(systemName: isPassed ? "trophy.fill" : "exclamationmark.triangle.fill")
-                    .font(.system(size: 40))
-                    .foregroundColor(isPassed ? .green : .red)
+                    .fill(isPassed ? AvionicsTheme.mint.opacity(0.15) : AvionicsTheme.red.opacity(0.15))
+                    .frame(width: 80, height: 80)
+                Image(systemName: isPassed ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
+                    .font(.system(size: 36))
+                    .foregroundColor(isPassed ? AvionicsTheme.mint : AvionicsTheme.red)
             }
             
             Text(isPassed ?
-                 (currentLanguage == .arabic ? "تهانينا! لقد اجتزت الاختبار ✈️" : "Congratulations! You Passed ✈️") :
-                 (currentLanguage == .arabic ? "يرجى مراجعة لوائح GACAR والمحاولة مجدداً" : "Keep studying GACAR rules & try again"))
-                .font(.title3.weight(.bold))
+                 (currentLanguage == .arabic ? "اجتزت المعايير بنجاح ✈️" : "GACAR KNOWLEDGE CRITERIA MET ✈️") :
+                 (currentLanguage == .arabic ? "يرجى مراجعة لوائح GACAR وإعادة المحاولة" : "BELOW PASSING GRADE — REVIEW GACAR"))
+                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                .foregroundColor(isPassed ? AvionicsTheme.mint : AvionicsTheme.amber)
             
-            VStack(spacing: 6) {
-                Text("\(percentage)%")
-                    .font(.system(size: 44, weight: .heavy, design: .monospaced))
-                    .foregroundColor(isPassed ? .green : .red)
-                
-                Text("\(currentLanguage == .arabic ? "النتيجة:" : "Score:") \(userScore) / \(totalQuestions)")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.secondary)
-            }
+            Text("\(percentage)%")
+                .font(.system(size: 40, weight: .black, design: .monospaced))
+                .foregroundColor(isPassed ? AvionicsTheme.mint : AvionicsTheme.red)
             
             Button(action: resetQuiz) {
                 HStack {
                     Image(systemName: "arrow.counterclockwise")
-                    Text(currentLanguage == .arabic ? "إعادة الاختبار" : "Restart Quiz")
+                    Text(currentLanguage == .arabic ? "إعادة الاختبار" : "RESET EXAM")
                 }
-                .font(.system(size: 15, weight: .bold))
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Capsule().fill(Color.blue))
-                .foregroundColor(.white)
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.cyan))
+                .foregroundColor(AvionicsTheme.bg)
             }
         }
-        .padding(24)
+        .padding(20)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.primary.opacity(0.04))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(AvionicsTheme.panel)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(AvionicsTheme.line, lineWidth: 1)
+                )
         )
     }
 
-    private func optionBackgroundColor(for index: Int, correct: Int) -> Color {
-        guard showAnswerFeedback else {
-            return Color.primary.opacity(0.04)
-        }
-        if index == correct {
-            return Color.green.opacity(0.15)
-        }
-        if index == selectedAnswerIndex {
-            return Color.red.opacity(0.15)
-        }
-        return Color.primary.opacity(0.03)
+    private func cockpitOptionBg(index: Int, correct: Int) -> Color {
+        guard showAnswerFeedback else { return AvionicsTheme.panel2 }
+        if index == correct { return AvionicsTheme.mint.opacity(0.15) }
+        if index == selectedAnswerIndex { return AvionicsTheme.red.opacity(0.15) }
+        return AvionicsTheme.panel2
     }
     
-    private func optionBorderColor(for index: Int, correct: Int) -> Color {
-        guard showAnswerFeedback else {
-            return Color.primary.opacity(0.08)
-        }
-        if index == correct {
-            return Color.green
-        }
-        if index == selectedAnswerIndex {
-            return Color.red
-        }
-        return Color.clear
+    private func cockpitOptionBorder(index: Int, correct: Int) -> Color {
+        guard showAnswerFeedback else { return AvionicsTheme.line }
+        if index == correct { return AvionicsTheme.mint }
+        if index == selectedAnswerIndex { return AvionicsTheme.red }
+        return AvionicsTheme.line
     }
 
-    // MARK: - 3. Calculators Section
-    private var calculatorsSection: some View {
-        VStack(alignment: .leading, spacing: 24) {
+    // MARK: - 3. Cockpit Flight Management Computer (FMC) Calculators
+    private var cockpitCalculatorsSection: some View {
+        VStack(alignment: .leading, spacing: 18) {
             // 1. VFR Fuel Reserve Calculator (GACAR Part 91.151)
-            VStack(alignment: .leading, spacing: 12) {
-                Text(currentLanguage == .arabic ? "حاسبة الوقود لرحلات VFR (GACAR 91.151)" : "GACAR 91.151 VFR Fuel Calculator")
-                    .font(.headline)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("FMC 01 // GACAR §91.151 VFR FUEL")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.cyan)
+                    Spacer()
+                    Text("MANDATORY RESERVE")
+                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.amber)
+                }
                 
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     HStack {
-                        Text(currentLanguage == .arabic ? "معدل استهلاك الوقود (جالون/ساعة):" : "Cruising Fuel Burn (GPH):")
-                            .font(.subheadline)
+                        Text(currentLanguage == .arabic ? "معدل الحرق (جالون/س):" : "Cruise Burn Rate (GPH):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
                         Spacer()
                         TextField("GPH", text: $cruiseFuelBurnGPH)
                             .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
+                            .frame(width: 70)
                             .textFieldStyle(.roundedBorder)
                     }
                     
                     HStack {
-                        Text(currentLanguage == .arabic ? "زمن الطيران إلى الوجهة (ساعات):" : "Flight Time to Destination (hrs):")
-                            .font(.subheadline)
+                        Text(currentLanguage == .arabic ? "زمن الطيران (ساعات):" : "En-route Time (Hrs):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
                         Spacer()
                         TextField("Hours", text: $flightTimeHours)
                             .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
+                            .frame(width: 70)
                             .textFieldStyle(.roundedBorder)
                     }
                     
                     Toggle(isOn: $isNightFlight) {
-                        Text(currentLanguage == .arabic ? "رحلة ليلية (Night VFR - 45 دقيقة احتياطي)" : "Night VFR Flight (45 min reserve)")
-                            .font(.subheadline.weight(.semibold))
+                        Text(currentLanguage == .arabic ? "طيران ليلي (احتياطي 45 دقيقة §91.151)" : "Night VFR (45 Min Reserve §91.151)")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.amber)
                     }
                     
                     let gph = Double(cruiseFuelBurnGPH) ?? 10.0
@@ -659,43 +725,56 @@ struct AviationToolsView: View {
                     let reserveFuel = gph * (reserveMinutes / 60.0)
                     let totalFuelRequired = tripFuel + reserveFuel
                     
-                    Divider()
+                    Divider().background(AvionicsTheme.line)
                     
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(currentLanguage == .arabic ? "إجمالي الوقود المطلوب:" : "Total Required Fuel:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            Text(currentLanguage == .arabic ? "إجمالي الوقود المطلوب:" : "MIN FUEL REQUIRED:")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
                             Text(String(format: "%.1f GAL", totalFuelRequired))
-                                .font(.system(size: 20, weight: .bold, design: .monospaced))
-                                .foregroundColor(.blue)
+                                .font(.system(size: 18, weight: .heavy, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.cyan)
                         }
                         Spacer()
                         VStack(alignment: .trailing) {
-                            Text(currentLanguage == .arabic ? "وقود الرحلة / الاحتياطي:" : "Trip / Reserve Fuel:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            Text(currentLanguage == .arabic ? "رحلة / احتياطي:" : "TRIP / RESERVE:")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
                             Text(String(format: "%.1f / %.1f GAL", tripFuel, reserveFuel))
-                                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.mint)
                         }
                     }
                 }
-                .padding(14)
+                .padding(12)
                 .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.blue.opacity(0.05))
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AvionicsTheme.panel2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AvionicsTheme.line, lineWidth: 1)
+                        )
                 )
             }
             
-            // 2. Crosswind Calculator
-            VStack(alignment: .leading, spacing: 12) {
-                Text(currentLanguage == .arabic ? "حاسبة مركبة الرياح الجانبية (Crosswind)" : "Crosswind Component Calculator")
-                    .font(.headline)
+            // 2. Crosswind Component Calculator
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("FMC 02 // CROSSWIND COMPONENT")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.cyan)
+                    Spacer()
+                    Text("VECTOR RESOLUTION")
+                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.teal)
+                }
                 
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     HStack {
                         Text(currentLanguage == .arabic ? "سرعة الرياح (عقدة):" : "Wind Speed (kts):")
-                            .font(.subheadline)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
                         Spacer()
                         TextField("Kts", text: $windSpeed)
                             .multilineTextAlignment(.trailing)
@@ -704,8 +783,9 @@ struct AviationToolsView: View {
                     }
                     
                     HStack {
-                        Text(currentLanguage == .arabic ? "اتجاه الرياح (درجة):" : "Wind Direction (°):")
-                            .font(.subheadline)
+                        Text(currentLanguage == .arabic ? "اتجاه الرياح (°):" : "Wind Direction (°):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
                         Spacer()
                         TextField("Deg", text: $windDirection)
                             .multilineTextAlignment(.trailing)
@@ -714,8 +794,9 @@ struct AviationToolsView: View {
                     }
                     
                     HStack {
-                        Text(currentLanguage == .arabic ? "اتجاه المدرج (درجة):" : "Runway Heading (°):")
-                            .font(.subheadline)
+                        Text(currentLanguage == .arabic ? "اتجاه المدرج (°):" : "Runway Heading (°):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
                         Spacer()
                         TextField("Rwy", text: $runwayHeading)
                             .multilineTextAlignment(.trailing)
@@ -728,32 +809,36 @@ struct AviationToolsView: View {
                     let rwy = Double(runwayHeading) ?? 340.0
                     let (crosswind, headwind) = METARService.calculateCrosswind(windSpeed: ws, windDirection: wd, runwayHeading: rwy)
                     
-                    Divider()
+                    Divider().background(AvionicsTheme.line)
                     
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(currentLanguage == .arabic ? "الرياح الجانبية (Crosswind):" : "Crosswind Component:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            Text(currentLanguage == .arabic ? "الرياح الجانبية:" : "CROSSWIND COMPONENT:")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
                             Text(String(format: "%.1f KTS", crosswind))
-                                .font(.system(size: 18, weight: .bold, design: .monospaced))
-                                .foregroundColor(crosswind > 15 ? .orange : .green)
+                                .font(.system(size: 18, weight: .heavy, design: .monospaced))
+                                .foregroundColor(crosswind > 15 ? AvionicsTheme.amber : AvionicsTheme.mint)
                         }
                         Spacer()
                         VStack(alignment: .trailing) {
-                            Text(currentLanguage == .arabic ? "الرياح الأمامية (Headwind):" : "Headwind Component:")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            Text(currentLanguage == .arabic ? "الرياح الأمامية:" : "HEADWIND COMPONENT:")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
                             Text(String(format: "%.1f KTS", headwind))
-                                .font(.system(size: 18, weight: .bold, design: .monospaced))
-                                .foregroundColor(.blue)
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.cyan)
                         }
                     }
                 }
-                .padding(14)
+                .padding(12)
                 .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.primary.opacity(0.04))
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AvionicsTheme.panel2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AvionicsTheme.line, lineWidth: 1)
+                        )
                 )
             }
         }

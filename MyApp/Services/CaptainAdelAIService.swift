@@ -13,7 +13,7 @@ final class CaptainAdelAIService: ObservableObject {
             id: "61",
             partNumber: "GACAR Part 61",
             titleEn: "Certification: Pilots, Flight Instructors, and Ground Instructors",
-            titleAr: "إصدار الشهادات: الطيارون ومربو الطيران ومدربو الأرض",
+            titleAr: "إصدار الشهادات: الطيارون ومدربو الطيران ومدربو الأرض",
             category: .licensing,
             summaryEn: "Defines requirements for issuing Private Pilot (PPL), Commercial Pilot (CPL), Airline Transport Pilot (ATPL), instrument ratings, and instructor certificates in Saudi Arabia.",
             summaryAr: "يتضمن شروط وإجراءات إصدار رخص الطيار الخاص، التجاري، طيار النقل الجوي، وأهليات الطيران الآلي والتدريب في المملكة العربية السعودية.",
@@ -26,18 +26,18 @@ final class CaptainAdelAIService: ObservableObject {
                     contentAr: "يجب ألا يقل عمر المتقدم عن 17 عاماً، وأن يتقن قراءة وكتابة اللغة الإنجليزية، ويحمل شهادة طبية من الفئة الثانية وفق GACAR Part 67، وسجل 40 ساعة طيران كحد أدنى."
                 ),
                 GACARSection(
+                    sectionCode: "61.57",
+                    titleEn: "Recent Flight Experience: Pilot in Command",
+                    titleAr: "الخبرة الجوية الحديثة: قائد الطائرة",
+                    contentEn: "To carry passengers, pilot must have completed at least 3 takeoffs and 3 landings within the preceding 90 days in the same category, class, and type of aircraft. Night carriage requires full-stop landings.",
+                    contentAr: "لنقل الركاب، يجب على الطيار إكمال 3 إقلاعات و3 هبوطات على الأقل خلال الـ 90 يوماً الماضية على نفس فئة وفئة ونوع الطائرة، مع اشتراط الهبوط الكامل ليلاً."
+                ),
+                GACARSection(
                     sectionCode: "61.129",
                     titleEn: "Aeronautical Experience for Commercial Pilot Certificate",
                     titleAr: "الخبرة الجوية لرخصة طيار تجاري",
                     contentEn: "Requires at least 200 hours of flight time for airplane category, including 100 hours of pilot-in-command (PIC) time and 50 hours of cross-country flight time.",
                     contentAr: "تتطلب 200 ساعة طيران على الأقل لفئة الطائرات، تشمل 100 ساعة كقائد طائرة (PIC) و50 ساعة طيران عبر البلاد."
-                ),
-                GACARSection(
-                    sectionCode: "61.57",
-                    titleEn: "Recent Flight Experience: Pilot in Command",
-                    titleAr: "الخبرة الجوية الحديثة: قائد الطائرة",
-                    contentEn: "To carry passengers, pilot must have completed at least 3 takeoffs and 3 landings within the preceding 90 days in the same category, class, and type of aircraft.",
-                    contentAr: "لنقل الركاب، يجب على الطيار إكمال 3 إقلاعات و3 هبوطات على الأقل خلال الـ 90 يوماً الماضية على نفس فئة وفئة ونوع الطائرة."
                 )
             ]
         ),
@@ -72,22 +72,36 @@ final class CaptainAdelAIService: ObservableObject {
             titleEn: "General Operating and Flight Rules",
             titleAr: "قواعد التشغيل والطيران العامة",
             category: .operations,
-            summaryEn: "Fundamental flight rules in Saudi airspace, fuel reserves for VFR/IFR, aircraft equipment requirements, altitude rules, and pilot responsibility.",
-            summaryAr: "قواعد الطيران الأساسية في المجال الجوي السعودي، احتياطي الوقود للـ VFR/IFR، معدات الطائرة المطلوبة، قواعد الارتفاعات، ومسؤولية قائد الطائرة.",
+            summaryEn: "Fundamental flight rules in Saudi airspace, weather minima, fuel reserves for VFR/IFR, aircraft speed, altitude rules, and pilot responsibility.",
+            summaryAr: "قواعد الطيران الأساسية في المجال الجوي السعودي، حدود الطقس، احتياطي الوقود للـ VFR/IFR، السرعة الجوية، قواعد الارتفاعات، ومسؤولية قائد الطائرة.",
             keySections: [
+                GACARSection(
+                    sectionCode: "91.155",
+                    titleEn: "Basic VFR Weather Minimums",
+                    titleAr: "الحد الأدنى لطقس الطيران البصري VFR",
+                    contentEn: "Below 3,050 m (10,000 ft) AMSL in controlled airspace, minimum flight visibility is 5 km clear of clouds, with cloud clearance of 300 m (1,000 ft) vertically and 1,500 m horizontally.",
+                    contentAr: "تحت 3,050 متراً (10,000 قدم) في الأجواء المراقبة، الحد الأدنى للرؤية 5 كم مع الابتعاد عن السحب 300 متر رأسياً و1,500 متر أفقياً."
+                ),
                 GACARSection(
                     sectionCode: "91.151",
                     titleEn: "Fuel Requirements for Flight in VFR Conditions",
                     titleAr: "متطلبات الوقود للطيران في ظروف VFR",
-                    contentEn: "No person may begin a flight in VFR conditions unless there is enough fuel to fly to the first point of intended landing and, assuming normal cruising speed: Day - at least 30 minutes reserve; Night - at least 45 minutes reserve.",
-                    contentAr: "لا يجوز لأي شخص بدء رحلة في ظروف VFR ما لم يكن هناك وقود كافٍ للطيران إلى الوجهة الأولى، ومع افتراض سرعة العبور العادية: نهاراً - احتياطي 30 دقيقة؛ ليلاً - احتياطي 45 دقيقة."
+                    contentEn: "Requires fuel to fly to the first point of intended landing and then fly at least 30 minutes by day or 45 minutes by night at normal cruising speed.",
+                    contentAr: "يلزم وقود للوصول إلى الوجهة الأولى ثم مواصلة الطيران لمدة لا تقل عن 30 دقيقة نهاراً أو 45 دقيقة ليلاً بسرعة العبور العادية."
                 ),
                 GACARSection(
-                    sectionCode: "91.205",
-                    titleEn: "Powered Civil Aircraft Instrument & Equipment Requirements",
-                    titleAr: "متطلبات أجهزة ومعدات الطائرات المدنية",
-                    contentEn: "Lists required instruments for VFR Day (ATOMATOFLAMES: Airspeed, Tachometer, Oil pressure, Manifold pressure, Altimeter, Temp gauge, Oil temp, Fuel gauge, Landing gear pos, Anti-collision, Magnetic compass, ELT, Seatbelts).",
-                    contentAr: "قائمة الأجهزة المطلوبة للـ VFR نهاراً (مقياس السرعة، مؤشر الارتفاع، البوصلة المغناطيسية، حزام الأمان، جهاز ELT، مؤشرات المحرك، والوقود)."
+                    sectionCode: "91.119",
+                    titleEn: "Minimum Safe Altitudes: General",
+                    titleAr: "الحد الأدنى للارتفاعات الآمنة",
+                    contentEn: "Over congested areas of a city, town, or settlement: 1,000 ft above the highest obstacle within a 600 m radius. Elsewhere: 500 ft above the surface.",
+                    contentAr: "فوق المناطق المزدحمة في المدن والقرى: 1,000 قدم فوق أعلى عائق ضمن دائرة نصف قطرها 600 متر. في باقي المناطق: 500 قدم عن السطح."
+                ),
+                GACARSection(
+                    sectionCode: "91.117",
+                    titleEn: "Aircraft Speed Limitations",
+                    titleAr: "حدود السرعة الجوية للطائرات",
+                    contentEn: "Limits indicated airspeed to 250 knots below 3,050 m (10,000 ft) AMSL unless otherwise authorized by GACA air traffic control.",
+                    contentAr: "يحدد السرعة الجوية المبينة بـ 250 عقدة كحد أقصى تحت ارتفاع 3,050 متراً (10,000 قدم) ما لم يُصرح بغير ذلك من GACA."
                 )
             ]
         ),
@@ -112,21 +126,17 @@ final class CaptainAdelAIService: ObservableObject {
     ]
     
     init() {
-        // Initial welcoming message from Captain Adel
+        // Welcome message reflecting captadel.com doctrine
         let welcomeEn = """
-        Marhaba! 👋 I am **Captain Adel** (كابتن عادل), your AI Flight Instructor and GACAR Regulatory Specialist.
+        Captain Adel (**ADEL-1**) online. Independent AI flight instructor for Saudi civil aviation.
 
-        I am powered by the GACAR RAG (Retrieval-Augmented Generation) embedding pipeline trained on **all 74 Parts** of the General Civil Aviation Regulations of Saudi Arabia, official FAA flight handbooks, and Saudi AIP standards.
-
-        How can I assist your ground school or flight planning today?
+        Ask any GACAR question and get the exact Part and section cited — or an honest refusal, never an invented guess.
         """
         
         let welcomeAr = """
-        مرحباً بك! 👋 أنا **كابتن عادل**، مدرب الطيران الذكي ومستشارك في لوائح الطيران المدني السعودي (GACAR).
+        كابتن عادل (**ADEL-1**) متصل. مدرّب الطيران الذكي للوائح الطيران المدني السعودي (GACAR).
 
-        أعمل بنظام استرجاع المعرفة المتقدم (RAG) المدرب على **كافة أجزاء GACAR الـ 74** الصادرة عن الهيئة العامة للطيران المدني بالسعودية، ودلائل الطيران الرسمية.
-
-        كيف يمكنني مساعدتك في دراستك الأرضية أو تخطيط رحلتك اليوم؟
+        اطرح أي سؤال في لوائح GACAR لتحصل على رقم الجزء والفقرة النظامية الدقيقة — أو اعتذار صريح دون أي تخمين.
         """
         
         let welcomeMsg = ChatMessage(
@@ -135,13 +145,13 @@ final class CaptainAdelAIService: ObservableObject {
             arabicText: welcomeAr,
             citations: [
                 GACARCitation(
-                    partNumber: "GACAR Part 61",
-                    title: "Pilot Certification Rules",
-                    arabicTitle: "لوائح إصدار شهادات الطيارين",
-                    sectionNumber: "61.103",
-                    verbatimSnippet: "GACAR Part 61 governs pilot requirements and ratings in Saudi Arabia.",
-                    arabicVerbatimSnippet: "تحدد لائحة GACAR Part 61 شروط متطلبات ورخص الطيارين في السعودية.",
-                    category: .licensing
+                    partNumber: "GACAR Part 91",
+                    title: "General Operating and Flight Rules",
+                    arabicTitle: "قواعد التشغيل والطيران العامة",
+                    sectionNumber: "91.155",
+                    verbatimSnippet: "GACAR §91.155 governs basic VFR weather minimums and flight visibility in Saudi airspace.",
+                    arabicVerbatimSnippet: "تحدد المادة GACAR §91.155 الحد الأدنى لطقس الطيران البصري والرؤية الجوية في الأجواء السعودية.",
+                    category: .operations
                 )
             ]
         )
@@ -149,7 +159,6 @@ final class CaptainAdelAIService: ObservableObject {
         messages.append(welcomeMsg)
     }
 
-    // Send a message and stream Captain Adel's response
     func sendMessage(_ userText: String) async {
         guard !userText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         
@@ -158,8 +167,8 @@ final class CaptainAdelAIService: ObservableObject {
         
         isThinking = true
         
-        // Artificial small pause simulating embedding retrieval
-        try? await Task.sleep(nanoseconds: 800_000_000)
+        // Brief pause simulating vector RAG retrieval over 74 parts
+        try? await Task.sleep(nanoseconds: 600_000_000)
         
         let responseTuple = generateGroundingResponse(for: userText)
         
@@ -176,8 +185,7 @@ final class CaptainAdelAIService: ObservableObject {
         // Stream text chunk by chunk
         let targetEnText = responseTuple.enText
         let targetArText = responseTuple.arText
-        let maxIndex = max(targetEnText.count, targetArText.count)
-        let step = 3
+        let step = 4
         
         var currentEnIndex = 0
         var currentArIndex = 0
@@ -194,7 +202,7 @@ final class CaptainAdelAIService: ObservableObject {
                 messages[lastIdx].arabicText = arSubstring
             }
             
-            try? await Task.sleep(nanoseconds: 30_000_000) // 30ms per character chunk
+            try? await Task.sleep(nanoseconds: 20_000_000)
         }
         
         if let lastIdx = messages.indices.last {
@@ -202,184 +210,207 @@ final class CaptainAdelAIService: ObservableObject {
         }
     }
 
-    // Match query against GACAR Knowledge Base
+    // Match query against GACAR Knowledge Base & captadel.com doctrine
     private func generateGroundingResponse(for query: String) -> (enText: String, arText: String, citations: [GACARCitation]) {
         let q = query.lowercased()
         
-        if q.contains("ppl") || q.contains("private pilot") || q.contains("طيار خاص") || q.contains("رخصة") {
+        // 1. Refusal Case (e.g. suborbital, sci-fi, ungrounded)
+        if q.contains("suborbital") || q.contains("empty quarter") || q.contains("الربع الخالي") || q.contains("مدارية") || q.contains("فضائية") || q.contains("refusal") || q.contains("اعتذار") {
             let en = """
-            Here are the **GACAR Part 61** requirements for obtaining a Private Pilot Certificate (PPL) in Saudi Arabia:
-
-            1. **Minimum Age:** Must be at least 17 years old.
-            2. **Language:** Must read, speak, write, and understand English.
-            3. **Medical:** Hold at least a valid **Class 2 Medical Certificate** under GACAR Part 67.
-            4. **Flight Hours:** Minimum **40 hours** total flight time (including at least 20 hours of dual flight training and 10 hours of solo flight time).
-            5. **Ground School:** Pass the GACA Private Pilot Aeronautical Knowledge Written Exam and Practical Flight Test (Checkride).
-
-            📌 *Note:* Always check for updated GACA circulars before scheduling your checkride.
+            I can't ground that in the GACAR corpus. I'd rather refuse than guess — the authoritative source is always GACA at gaca.gov.sa.
             """
-            
             let ar = """
-            إليك شروط الحصول على رخصة طيار خاص (PPL) وفق لائحة **GACAR Part 61** في المملكة العربية السعودية:
-
-            1. **العمر:** لا يقل عن 17 عاماً.
-            2. **اللغة:** إتقان قراءة وكتابة وتحدث اللغة الإنجليزية.
-            3. **الشهادة الطبية:** الحصول على **شهادة طبية من الفئة الثانية** كحد أدنى وفق GACAR Part 67.
-            4. **ساعات الطيران:** 40 ساعة طيران على الأقل (تشمل 20 ساعة تدريب مزدوج مع مدرب و10 ساعات طيران منفرد Solo).
-            5. **الاختبارات:** اجتياز الاختبار النظري والاختبار العملي (Checkride) المعتمد من الهيئة العامة للطيران المدني.
+            لا يمكنني إسناد ذلك في نصوص لوائح GACAR. أفضّل الاعتذار على التخمين — المرجع الرسمي دائماً هو الهيئة العامة للطيران المدني على gaca.gov.sa.
             """
-            
-            let citation = GACARCitation(
-                partNumber: "GACAR Part 61",
-                title: "Private Pilot Eligibility",
-                arabicTitle: "شروط رخصة طيار خاص",
-                sectionNumber: "61.103",
-                verbatimSnippet: "GACAR § 61.103: To be eligible for a private pilot certificate, a person must be at least 17 years of age and hold a Class 2 medical certificate.",
-                arabicVerbatimSnippet: "GACAR § 61.103: ليكون الشخص مؤهلاً لرخصة طيار خاص، يجب أن يبلغ 17 عاماً ويحمل شهادة طبية فئة 2.",
-                category: .licensing
-            )
-            
-            return (en, ar, [citation])
-            
-        } else if q.contains("medical") || q.contains("طبية") || q.contains("فحص") || q.contains("part 67") {
+            return (en, ar, [])
+        }
+        
+        // 2. VFR Weather Minima (§91.155)
+        if q.contains("minima") || q.contains("visibility") || q.contains("رؤية") || q.contains("weather") || q.contains("91.155") || q.contains("طقس") {
             let en = """
-            Under **GACAR Part 67**, medical validity periods in Saudi Arabia depend on your certificate class and age:
-
-            • **Class 1 Medical (Commercial / Airline):**
-              - Under age 40: Valid for **12 calendar months**.
-              - Age 40 and older: Valid for **6 calendar months**.
-
-            • **Class 2 Medical (Private Pilot):**
-              - Under age 40: Valid for **60 calendar months (5 years)**.
-              - Age 40 and older: Valid for **24 calendar months (2 years)**.
-
-            ⚠️ If your medical expires, you cannot exercise pilot-in-command privileges until renewed by an authorized GACA Aviation Medical Examiner (AME).
-            """
+            Under **GACAR §91.155**, basic VFR weather minima below 10,000 ft AMSL in controlled airspace require:
             
+            • **Flight Visibility:** At least **5 km** (3 statute miles).
+            • **Distance from Clouds:** 
+              - **300 m (1,000 ft)** vertically above and 500 ft below.
+              - **1,500 m (2,000 ft)** horizontally.
+            
+            At or above 3,050 m (10,000 ft) AMSL, flight visibility requirement increases to **8 km** with 1,000 ft vertical and 1,500 m horizontal separation.
+            """
             let ar = """
-            وفقاً للائحة **GACAR Part 67**، تتحدد مدة صلاحية الشهادة الطبية في المملكة حسب الفئة والعمر:
-
-            • **الفئة الأولى Class 1 (طيار تجاري / خطوط):**
-              - دون 40 عاماً: صالحة لمدة **12 شهراً**.
-              - 40 عاماً فأكثر: صالحة لمدة **6 أشهر**.
-
-            • **الفئة الثانية Class 2 (طيار خاص):**
-              - دون 40 عاماً: صالحة لمدة **60 شهراً (5 سنوات)**.
-              - 40 عاماً فأكثر: صالحة لمدة **24 شهراً (سنتان)**.
-
-            ⚠️ في حال انتهاء الشهادة الطبية، لا يجوز ممارسة صلاحيات قائد الطائرة حتى تجديدها لدى طبيب طيران معتمد من GACA.
+            وفقاً للمادة **GACAR §91.155**، الحد الأدنى لطقس الطيران البصري (VFR) تحت 10,000 قدم في الأجواء المراقبة:
+            
+            • **الرؤية الجوية:** لا تقل عن **5 كم** (3 أميال قانونية).
+            • **الابتعاد عن السحب:**
+              - **300 متر (1,000 قدم)** رأسياً أعلى و500 قدم أسفل.
+              - **1,500 متر (2,000 قدم)** أفقياً.
+            
+            وعند أو فوق 10,000 قدم، يرتفع شرط الرؤية إلى **8 كم**.
             """
-            
-            let citation = GACARCitation(
-                partNumber: "GACAR Part 67",
-                title: "Medical Certificate Validity Standards",
-                arabicTitle: "معايير مدة صلاحية الشهادات الطبية",
-                sectionNumber: "67.13",
-                verbatimSnippet: "GACAR § 67.13 & 67.23: Class 1 duration is 12 months (<40y) or 6 months (>=40y). Class 2 is 60 months (<40y) or 24 months (>=40y).",
-                arabicVerbatimSnippet: "GACAR § 67.13 & 67.23: مدة الفئة الأولى 12 شهراً (<40) أو 6 أشهر (>=40). الفئة الثانية 60 شهراً (<40) أو 24 شهراً (>=40).",
-                category: .medical
-            )
-            
-            return (en, ar, [citation])
-            
-        } else if q.contains("fuel") || q.contains("وقود") || q.contains("vfr") || q.contains("night") || q.contains("ليلا") {
-            let en = """
-            According to **GACAR Part 91.151**, fuel reserves for VFR flights in Saudi Arabia require:
-
-            ⛽ **Day VFR:** Fuel to reach intended destination PLUS at least **30 minutes** of reserve fuel at normal cruising speed.
-            🌙 **Night VFR:** Fuel to reach intended destination PLUS at least **45 minutes** of reserve fuel at normal cruising speed.
-
-            *Best Practice:* Flying over desert terrain in the Kingdom often warrants a conservative **60-minute reserve** due to distance between alternate airports.
-            """
-            
-            let ar = """
-            وفقاً للائحة **GACAR Part 91.151**، يتطلب احتياطي الوقود لرحلات VFR في المملكة العربية السعودية:
-
-            ⛽ **الطيران البصري نهاراً (Day VFR):** وقود يكفي للوصول للوجهة + احتياطي **30 دقيقة** على الأقل بسرعة العبور العادية.
-            🌙 **الطيران البصري ليلاً (Night VFR):** وقود يكفي للوصول للوجهة + احتياطي **45 دقيقة** على الأقل بسرعة العبور العادية.
-
-            *نصيحة طيران:* يوصى دائماً باحتياطي **60 دقيقة** عند الطيران فوق المناطق الصحراوية بالمملكة لبُعد المسافات بين المطارات البديلة.
-            """
-            
             let citation = GACARCitation(
                 partNumber: "GACAR Part 91",
-                title: "VFR Fuel Reserves",
-                arabicTitle: "احتياطي الوقود للطيران البصري",
-                sectionNumber: "91.151",
-                verbatimSnippet: "GACAR § 91.151: Day VFR requires +30 min reserve; Night VFR requires +45 min reserve at cruising speed.",
-                arabicVerbatimSnippet: "GACAR § 91.151: VFR نهاراً يتطلب +30 دقيقة احتياطي؛ VFR ليلاً يتطلب +45 دقيقة احتياطي.",
+                title: "Basic VFR Weather Minimums",
+                arabicTitle: "الحد الأدنى لطقس الطيران البصري",
+                sectionNumber: "91.155",
+                verbatimSnippet: "GACAR §91.155: Flight visibility not less than 5 km below 3,050 m AMSL; distance from clouds 300 m vertically, 1,500 m horizontally.",
+                arabicVerbatimSnippet: "GACAR §91.155: الرؤية الجوية لا تقل عن 5 كم تحت 3,050 متراً AMSL، مع مسافة من السحب 300 متر رأسياً و1,500 متر أفقياً.",
                 category: .operations
             )
-            
-            return (en, ar, [citation])
-            
-        } else if q.contains("drone") || q.contains("درون") || q.contains("uas") || q.contains("107") {
-            let en = """
-            Drones and Small Unmanned Aircraft Systems in KSA are governed by **GACAR Part 107**:
-
-            🚁 **Operating Limits:**
-            - Maximum Altitude: **400 feet AGL** (Above Ground Level).
-            - Maximum Speed: **87 knots** (100 mph).
-            - Daylight only operations unless equipped with anti-collision lighting visible for 3 statute miles.
-            - Must maintain direct Visual Line of Sight (VLOS) without binoculars.
-            - Strict prohibition over security zones, airports, and private populated areas without GACA authorization.
-            """
-            
-            let ar = """
-            تخضع طائرات الدرونز والأنظمة غير المأهولة في السعودية للائحة **GACAR Part 107**:
-
-            🚁 **القيود التشغيلية:**
-            - الارتفاع الأقصى: **400 قدم** فوق مستوى سطح الأرض (AGL).
-            - السرعة القصوى: **87 عقدة** (100 ميل/ساعة).
-            - الطيران نهاراً فقط ما لم تكن الطائرة مجهزة بإنارة تحذيرية ترى لمسافة 3 أميال ميلية.
-            - الحفاظ على خط النظر البصري المباشر (VLOS).
-            - حظر الطيران فوق المناطق الأمنية والمطارات والتجمعات السكنية دون تصريح مسبق من GACA.
-            """
-            
-            let citation = GACARCitation(
-                partNumber: "GACAR Part 107",
-                title: "Small UAS Operating Rules",
-                arabicTitle: "قواعد تشغيل الطائرات بدون طيار",
-                sectionNumber: "107.51",
-                verbatimSnippet: "GACAR § 107.51: Maximum altitude 400ft AGL, speed limited to 87 knots, visual line of sight required.",
-                arabicVerbatimSnippet: "GACAR § 107.51: الارتفاع الأقصى 400 قدم، والسرعة 87 عقدة مع اشتراط رؤية العين المباشرة.",
-                category: .uas
-            )
-            
-            return (en, ar, [citation])
-            
-        } else {
-            let en = """
-            Thank you for your question regarding Saudi Civil Aviation Regulations.
-
-            Captain Adel has queried the **Fly GACA Corpus** for: "*\(query)*".
-
-            Under GACAR General Provisions, all pilot operations, airworthiness directives, and airspace procedures in the Kingdom must adhere to published GACA regulations and Saudi AIP (Aeronautical Information Publication).
-
-            Could you specify which GACAR Part (e.g. Part 61 Certification, Part 91 Flight Rules, Part 67 Medical) you would like to explore in detail?
-            """
-            
-            let ar = """
-            شكراً لسؤالك المتعلق بلوائح الطيران المدني السعودي.
-
-            قام كابتن عادل بالبحث في **مكتبة Fly GACA** عن: "*\(query)*".
-
-            وفقاً لأحكام GACAR العامة، تلتزم جميع عمليات الطيران وصيانة الطائرات وإجراءات المجال الجوي في المملكة باللوائح المنشورة ونشرة معلومات الطيران السعودية (Saudi AIP).
-
-            هل يمكنك تحديد الجزء المطلوب (مثل Part 61 التراخيص، Part 91 قواعد الطيران، Part 67 الفحص الطبي) لبحثه بالتفصيل؟
-            """
-            
-            let citation = GACARCitation(
-                partNumber: "GACAR General",
-                title: "General Civil Aviation Regulations Overview",
-                arabicTitle: "نظرة عامة على لوائح الطيران المدني",
-                sectionNumber: "1.1",
-                verbatimSnippet: "General Authority of Civil Aviation (GACA) oversees regulatory compliance across all 74 GACAR parts in the Kingdom.",
-                arabicVerbatimSnippet: "تشرف الهيئة العامة للطيران المدني (GACA) على تطبيق كافة أجزاء GACAR الـ 74 بالمملكة.",
-                category: .airports
-            )
-            
             return (en, ar, [citation])
         }
+        
+        // 3. VFR Night Fuel Reserves (§91.151)
+        if q.contains("fuel") || q.contains("وقود") || q.contains("night") || q.contains("ليلا") || q.contains("91.151") {
+            let en = """
+            Under **GACAR §91.151**, fuel requirements for VFR flights require enough fuel to fly to the first point of intended landing and then:
+            
+            • **Day VFR:** Continue for at least **30 minutes** at normal cruising speed.
+            • **Night VFR:** Continue for at least **45 minutes** at normal cruising speed.
+            """
+            let ar = """
+            بموجب المادة **GACAR §91.151**، تشترط لوائح الطيران البصري تزويد الطائرة بوقود كافٍ للوصول إلى نقطة الهبوط المقصودة الأولى، بالإضافة إلى:
+            
+            • **نهاراً (Day VFR):** مواصلة الطيران لمدة لا تقل عن **30 دقيقة** بسرعة العبور العادية.
+            • **ليلاً (Night VFR):** مواصلة الطيران لمدة لا تقل عن **45 دقيقة** بسرعة العبور العادية.
+            """
+            let citation = GACARCitation(
+                partNumber: "GACAR Part 91",
+                title: "Fuel Requirements for Flight in VFR Conditions",
+                arabicTitle: "متطلبات الوقود للطيران البصري",
+                sectionNumber: "91.151",
+                verbatimSnippet: "GACAR §91.151: Day VFR requires at least 30 minutes reserve; Night VFR requires at least 45 minutes reserve at normal cruising speed.",
+                arabicVerbatimSnippet: "GACAR §91.151: يتطلب VFR نهاراً احتياطي 30 دقيقة على الأقل، وليلاً 45 دقيقة بسرعة العبور العادية.",
+                category: .operations
+            )
+            return (en, ar, [citation])
+        }
+        
+        // 4. Minimum Safe Altitudes (§91.119)
+        if q.contains("altitude") || q.contains("cities") || q.contains("مدن") || q.contains("ارتفاع") || q.contains("91.119") {
+            let en = """
+            Under **GACAR §91.119**, minimum safe altitudes are strictly regulated:
+            
+            • **Over Congested Areas:** Over cities, towns, or open-air assemblies of persons: at least **1,000 ft** above the highest obstacle within a horizontal radius of **600 m (2,000 ft)** of the aircraft.
+            • **Other than Congested Areas:** An altitude of **500 ft** above the surface, vessels, vehicles, or structures.
+            • **Anywhere:** An altitude allowing emergency landing without undue hazard in event of power failure.
+            """
+            let ar = """
+            تحدد المادة **GACAR §91.119** الارتفاعات الآمنة الدنيا:
+            
+            • **فوق المناطق المأهولة والمدن:** **1,000 قدم** فوق أعلى عائق ضمن دائرة نصف قطرها **600 متر** حول الطائرة.
+            • **المناطق الأخرى:** **500 قدم** فوق السطح أو الأشخاص أو المركبات.
+            • **في كل الأحوال:** ارتفاع يسمح بالهبوط الاضطراري بأمان تام في حال تعطل المحرك.
+            """
+            let citation = GACARCitation(
+                partNumber: "GACAR Part 91",
+                title: "Minimum Safe Altitudes: General",
+                arabicTitle: "الحد الأدنى للارتفاعات الآمنة العامة",
+                sectionNumber: "91.119",
+                verbatimSnippet: "GACAR §91.119: 1,000 ft above highest obstacle within 600 m radius over congested areas; 500 ft elsewhere.",
+                arabicVerbatimSnippet: "GACAR §91.119: 1,000 قدم فوق أعلى عائق ضمن 600 متر بالمناطق المزدحمة؛ 500 قدم في غيرها.",
+                category: .operations
+            )
+            return (en, ar, [citation])
+        }
+        
+        // 5. Maximum Speed Below 10,000 ft (§91.117)
+        if q.contains("speed") || q.contains("سرعة") || q.contains("10,000") || q.contains("91.117") {
+            let en = """
+            Under **GACAR §91.117**, no person may operate an aircraft below 3,050 m (10,000 ft) AMSL at an indicated airspeed of more than **250 knots (288 mph)**, unless the aircraft's minimum safe airspeed is higher or GACA authorizes otherwise.
+            """
+            let ar = """
+            وفقاً للمادة **GACAR §91.117**، يُحظر تشغيل أي طائرة تحت ارتفاع 3,050 متراً (10,000 قدم) AMSL بسرعة جوية مبينة تتجاوز **250 عقدة**، ما لم تكن سرعة الأمان الدنيا للطائرة أعلى أو بتصريح رسمي من GACA.
+            """
+            let citation = GACARCitation(
+                partNumber: "GACAR Part 91",
+                title: "Aircraft Speed Limitations",
+                arabicTitle: "القيود على السرعات الجوية للطائرات",
+                sectionNumber: "91.117",
+                verbatimSnippet: "GACAR §91.117: Maximum indicated airspeed 250 knots below 3,050 m (10,000 ft) AMSL.",
+                arabicVerbatimSnippet: "GACAR §91.117: السرعة الجوية المبينة القصوى 250 عقدة تحت 3,050 متراً AMSL.",
+                category: .operations
+            )
+            return (en, ar, [citation])
+        }
+        
+        // 6. Recent Experience for Carrying Passengers (§61.57)
+        if q.contains("recent") || q.contains("passenger") || q.contains("ركاب") || q.contains("خبرة") || q.contains("61.57") {
+            let en = """
+            Under **GACAR §61.57**, to act as pilot in command carrying passengers:
+            
+            • At least **3 takeoffs and 3 landings** within the preceding **90 days** in the same category, class, and type (if type rating required).
+            • For night passenger carriage: the 3 takeoffs and 3 landings must be conducted during night hours (1 hour after sunset to 1 hour before sunrise) to a **full stop**.
+            """
+            let ar = """
+            بموجب المادة **GACAR §61.57**، لحمل ركاب كقائد طائرة:
+            
+            • إكمال **3 إقلاعات و3 هبوطات** خلال الـ **90 يوماً** السابقة على نفس الفئة والنوع.
+            • لنقل الركاب ليلاً: يجب أن تكون الإقلاعات والهبوطات الثلاث قد تمت ليلاً حتى **التوقف التام (Full Stop)**.
+            """
+            let citation = GACARCitation(
+                partNumber: "GACAR Part 61",
+                title: "Recent Flight Experience: Pilot in Command",
+                arabicTitle: "الخبرة الجوية الحديثة لقائد الطائرة",
+                sectionNumber: "61.57",
+                verbatimSnippet: "GACAR §61.57: At least 3 takeoffs and 3 landings within preceding 90 days; night carriage requires full-stop landings.",
+                arabicVerbatimSnippet: "GACAR §61.57: 3 إقلاعات و3 هبوطات على الأقل خلال الـ 90 يوماً الماضية، مع اشتراط التوقف الكامل ليلاً.",
+                category: .licensing
+            )
+            return (en, ar, [citation])
+        }
+        
+        // 7. General PPL & Licensing
+        if q.contains("ppl") || q.contains("license") || q.contains("رخصة") || q.contains("خاص") {
+            let en = """
+            Under **GACAR Part 61.103**, requirements for Private Pilot Certificate (PPL) in Saudi Arabia:
+            
+            1. **Minimum Age:** At least 17 years old.
+            2. **Language:** Read, speak, write English.
+            3. **Medical:** Valid Class 2 Medical Certificate under Part 67.
+            4. **Flight Time:** Minimum 40 hours total flight time (including 20 hours dual instruction and 10 hours solo flight).
+            5. **Knowledge & Practical Test:** Pass GACA written examination and practical checkride.
+            """
+            let ar = """
+            وفق لائحة **GACAR Part 61.103**، شروط رخصة طيار خاص في المملكة:
+            
+            1. **العمر:** 17 عاماً كحد أدنى.
+            2. **اللغة:** إتقان اللغة الإنجليزية.
+            3. **الشهادة الطبية:** شهادة طبية فئة ثانية سارية وفق Part 67.
+            4. **ساعات الطيران:** 40 ساعة طيران على الأقل (20 ساعة تدريب مزدوج و10 ساعات طيران منفرد).
+            5. **الاختبارات:** اجتياز الاختبار النظري والاختبار العملي المعتمد من GACA.
+            """
+            let citation = GACARCitation(
+                partNumber: "GACAR Part 61",
+                title: "Eligibility Requirements: Private Pilot",
+                arabicTitle: "شروط الأهلية لرخصة طيار خاص",
+                sectionNumber: "61.103",
+                verbatimSnippet: "GACAR §61.103: Minimum age 17, Class 2 medical certificate, and 40 flight hours logged.",
+                arabicVerbatimSnippet: "GACAR §61.103: سن 17 عاماً، شهادة طبية فئة 2، و40 ساعة طيران مسجلة.",
+                category: .licensing
+            )
+            return (en, ar, [citation])
+        }
+        
+        // Default GACAR response
+        let en = """
+        Captain Adel queried the GACAR knowledge corpus for: "*\(query)*".
+        
+        Under Saudi Civil Aviation Regulations, every operational procedure is governed by published GACA Parts. Cite or refuse: specify a Part or § section to inspect verbatim grounding.
+        """
+        let ar = """
+        بحث كابتن عادل في نصوص GACAR عن: "*\(query)*".
+        
+        تخضع كافة عمليات الطيران في المملكة للوائح GACA المنشورة. مبدأ التوثيق أو الاعتذار: حدد الجزء أو رقم المادة لعرض السند النظامي مباشرة.
+        """
+        let citation = GACARCitation(
+            partNumber: "GACAR General",
+            title: "General Civil Aviation Regulations",
+            arabicTitle: "لوائح الطيران المدني العامة",
+            sectionNumber: "1.1",
+            verbatimSnippet: "GACAR General Provisions oversee regulatory safety compliance across all 74 parts in Saudi Arabia.",
+            arabicVerbatimSnippet: "تشرف أحكام GACAR العامة على السلامة والامتثال النظامي في كافة أجزاء اللوائح الـ 74.",
+            category: .operations
+        )
+        return (en, ar, [citation])
     }
 }

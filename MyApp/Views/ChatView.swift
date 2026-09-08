@@ -7,51 +7,57 @@ struct ChatView: View {
     @State private var showVoiceModal: Bool = false
     @FocusState private var isInputFocused: Bool
     
-    // Preset prompt pills for quick pilot queries
+    // Exact prompt pills matching captadel.com queries
     private let promptPillsEn = [
-        "What are PPL requirements?",
-        "Class 1 Medical duration?",
-        "VFR night fuel minimums?",
-        "Drone Part 107 altitude limit?",
-        "Commercial pilot flight hours?"
+        "VFR weather minima in Class C/D? (§91.155)",
+        "Fuel reserve for VFR night flight? (§91.151)",
+        "Minimum safe altitude over cities? (§91.119)",
+        "Speed limit below 10,000 ft? (§91.117)",
+        "Recent flight experience for passengers? (§61.57)",
+        "Suborbital hops over Empty Quarter? (Refusal)"
     ]
     
     private let promptPillsAr = [
-        "متطلبات رخصة طيار خاص؟",
-        "مدة صلاحية الفحص الطبي فئة 1؟",
-        "احتياطي الوقود للطيران البصري ليلاً؟",
-        "ارتفاع الدرونز في Part 107؟",
-        "ساعات الطيران للطيار التجاري؟"
+        "الحد الأدنى للرؤية VFR في الأجواء المراقبة؟ (§91.155)",
+        "احتياطي الوقود للطيران البصري ليلاً؟ (§91.151)",
+        "الارتفاع الآمن فوق المدن والمناطق المأهولة؟ (§91.119)",
+        "السرعة القصوى تحت 10,000 قدم؟ (§91.117)",
+        "شروط الخبرة الحديثة لنقل الركاب؟ (§61.57)",
+        "رحلات مدارية فوق الربع الخالي؟ (تجربة الاعتذار)"
     ]
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header Bar
+            // 1. Cockpit Header HUD
             HeaderHUDView(currentLanguage: $currentLanguage, onVoiceModeTap: {
                 showVoiceModal = true
             })
             
-            // Chat History List
+            // 2. GACAR Running Tape Ticker
+            GACARTickerTapeView()
+            
+            // 3. Chat History Stream
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 16) {
-                        // Disclaimer Banner
-                        disclaimerBanner
+                    LazyVStack(spacing: 14) {
+                        // Doctrine Banner
+                        doctrineBanner
                         
                         // Messages
                         ForEach(aiService.messages) { message in
-                            MessageRowView(message: message, language: currentLanguage)
+                            CockpitMessageRowView(message: message, language: currentLanguage)
                                 .id(message.id)
                         }
                         
                         if aiService.isThinking {
-                            thinkingIndicatorRow
+                            cockpitThinkingIndicator
                                 .id("thinking_row")
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                 }
+                .background(AvionicsTheme.bg)
                 .onChange(of: aiService.messages.count) { _ in
                     if let lastMsg = aiService.messages.last {
                         withAnimation {
@@ -61,7 +67,7 @@ struct ChatView: View {
                 }
             }
             
-            // Quick Prompt Pills
+            // 4. Quick Pilot Query Pills
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     let pills = currentLanguage == .arabic ? promptPillsAr : promptPillsEn
@@ -70,69 +76,94 @@ struct ChatView: View {
                             inputText = pill
                             sendUserMessage()
                         }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "sparkles")
-                                    .font(.caption2)
-                                    .foregroundColor(.blue)
+                            HStack(spacing: 5) {
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundColor(AvionicsTheme.cyan)
                                 Text(pill)
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.ink)
                             }
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 10)
                             .padding(.vertical, 6)
                             .background(
-                                Capsule()
-                                    .fill(Color.blue.opacity(0.08))
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(AvionicsTheme.panel2)
                                     .overlay(
-                                        Capsule()
-                                            .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .stroke(AvionicsTheme.line, lineWidth: 1)
                                     )
                             )
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 14)
                 .padding(.vertical, 6)
             }
+            .background(AvionicsTheme.panel)
 
-            Divider()
-
-            // Input Bar
+            // 5. Avionics Cockpit Input Console
             HStack(spacing: 10) {
-                TextField(
-                    currentLanguage == .arabic ? "اسأل كابتن عادل عن لوائح GACAR..." : "Ask Captain Adel about GACAR rules...",
-                    text: $inputText
-                )
-                .focused($isInputFocused)
-                .padding(.horizontal, 14)
+                HStack(spacing: 8) {
+                    Text("REQ >")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.cyan)
+                    
+                    TextField(
+                        currentLanguage == .arabic ? "اطلب من كابتن عادل توثيق مادة في GACAR..." : "Ask Captain Adel to cite GACAR regulations...",
+                        text: $inputText
+                    )
+                    .font(.system(size: 13, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.ink)
+                    .focused($isInputFocused)
+                    .onSubmit {
+                        sendUserMessage()
+                    }
+                }
+                .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color.primary.opacity(0.05))
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AvionicsTheme.panel2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AvionicsTheme.line, lineWidth: 1)
+                        )
                 )
-                .onSubmit {
-                    sendUserMessage()
-                }
 
+                // Transmit Button
                 Button(action: sendUserMessage) {
                     ZStack {
-                        Circle()
-                            .fill(inputText.trimmingCharacters(in: .whitespaces).isEmpty ? Color.gray.opacity(0.3) : Color.blue)
-                            .frame(width: 40, height: 40)
-                        Image(systemName: "paperplane.fill")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(inputText.trimmingCharacters(in: .whitespaces).isEmpty ? AvionicsTheme.panel2 : AvionicsTheme.cyan)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(inputText.trimmingCharacters(in: .whitespaces).isEmpty ? AvionicsTheme.line : AvionicsTheme.cyan, lineWidth: 1)
+                            )
+                            .frame(width: 42, height: 40)
+                        
+                        Image(systemName: "arrow.up.right")
+                            .font(.system(size: 15, weight: .black))
+                            .foregroundColor(inputText.trimmingCharacters(in: .whitespaces).isEmpty ? AvionicsTheme.inkDim : AvionicsTheme.bg)
                     }
                 }
                 .disabled(inputText.trimmingCharacters(in: .whitespaces).isEmpty || aiService.isThinking)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(.ultraThinMaterial)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(AvionicsTheme.panel)
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(AvionicsTheme.line),
+                alignment: .top
+            )
         }
+        .background(AvionicsTheme.bg)
         .environment(\.layoutDirection, currentLanguage.isRTL ? .rightToLeft : .leftToRight)
         .sheet(isPresented: $showVoiceModal) {
-            VoiceAssistantModalView(aiService: aiService, language: currentLanguage)
+            CockpitVoiceAssistantModalView(aiService: aiService, language: currentLanguage)
         }
     }
     
@@ -145,102 +176,201 @@ struct ChatView: View {
         }
     }
     
-    private var disclaimerBanner: some View {
+    // MARK: - captadel.com Doctrine Banner
+    private var doctrineBanner: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "info.circle.fill")
-                .foregroundColor(.blue)
+            Image(systemName: "shield.checkerboard")
+                .foregroundColor(AvionicsTheme.cyan)
                 .font(.system(size: 16))
             
-            Text(currentLanguage == .arabic ?
-                 "كابتن عادل مساعد طيران تعليمي مستقل. الإجابات مُسترجعة من لوائح GACAR. يرجى دائماً مراجعة منشورات GACA الرسمية للقرارات التشغيلية." :
-                 "Captain Adel is an independent educational flight assistant. Answers are grounded in GACAR regulations. Always verify with official GACA publications.")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(currentLanguage == .arabic ? "عقيدة الاسترجاع: التوثيق أو الاعتذار" : "DOCTRINE // CITE OR REFUSE")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.cyan)
+                    
+                    Text("100% GROUNDED")
+                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(AvionicsTheme.mint.opacity(0.15))
+                        .foregroundColor(AvionicsTheme.mint)
+                        .cornerRadius(3)
+                }
+                
+                Text(currentLanguage == .arabic ?
+                     "كابتن عادل يجيب فقط بنص المادة ورقمها من لوائح GACAR الـ 74، ويعتذر عن التخمين عند عدم وجود سند قطعي. المرجع الرسمي: gaca.gov.sa" :
+                     "Captain Adel answers with the exact Part and section cited — or an honest refusal. Never an invented guess. Authoritative source: gaca.gov.sa")
+                    .font(.system(size: 11))
+                    .foregroundColor(AvionicsTheme.inkDim)
+                    .lineSpacing(2)
+            }
         }
         .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.blue.opacity(0.06))
+            RoundedRectangle(cornerRadius: 8)
+                .fill(AvionicsTheme.panel)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(AvionicsTheme.line, lineWidth: 1)
+                )
         )
     }
     
-    private var thinkingIndicatorRow: some View {
+    private var cockpitThinkingIndicator: some View {
         HStack {
-            HStack(spacing: 6) {
-                ProgressView()
-                    .scaleEffect(0.8)
-                Text(currentLanguage == .arabic ? "كابتن عادل يبحث في لوائح GACAR..." : "Captain Adel querying GACAR Corpus...")
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .foregroundColor(.secondary)
+            HStack(spacing: 8) {
+                PulsingDotView(color: AvionicsTheme.cyan, size: 6)
+                Text(currentLanguage == .arabic ? "كابتن عادل يفحص نصوص GACAR..." : "QUERYING GACAR VECTOR EMBEDDINGS...")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.cyan)
             }
-            .padding(10)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.primary.opacity(0.05))
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(AvionicsTheme.panel)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1)
+                    )
             )
             Spacer()
         }
     }
 }
 
-// MARK: - Message Row View
-struct MessageRowView: View {
+// MARK: - Cockpit Message Row View (Matching captadel.com chat demo)
+struct CockpitMessageRowView: View {
     let message: ChatMessage
     let language: AppLanguage
     
+    private var isRefusal: Bool {
+        // captadel.com refusal doctrine detection
+        message.text.lowercased().contains("refuse") ||
+        message.text.lowercased().contains("can't ground") ||
+        message.text.lowercased().contains("cannot ground") ||
+        message.text.contains("أعتذر") ||
+        message.text.contains("لا يمكنني إسناد")
+    }
+    
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            if message.sender == .captainAdel {
-                ZStack {
-                    Circle()
-                        .fill(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 32, height: 32)
-                    Image(systemName: "airplane")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.white)
-                }
+        if message.sender == .captainAdel {
+            // Captain Adel Response Card with Accent Stripe
+            HStack(alignment: .top, spacing: 10) {
+                // Chip Avatar
+                Image.captainAvatar
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 34, height: 34)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(AvionicsTheme.teal, lineWidth: 1)
+                    )
+                    .padding(.top, 2)
                 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(messageText)
-                        .font(.system(size: 14.5))
-                        .lineSpacing(4)
-                        .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 8) {
+                    // Header Bar with Callsign & Badge
+                    HStack(spacing: 6) {
+                        Text(language == .arabic ? "كابتن عادل" : "CAPT. ADEL")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        
+                        if isRefusal {
+                            Text("REFUSAL // NO CORPUS MATCH")
+                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(AvionicsTheme.amber.opacity(0.15))
+                                .foregroundColor(AvionicsTheme.amber)
+                                .cornerRadius(2)
+                        } else {
+                            Text("GACAR CITED")
+                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 1)
+                                .background(AvionicsTheme.cyan.opacity(0.15))
+                                .foregroundColor(AvionicsTheme.cyan)
+                                .cornerRadius(2)
+                        }
+                    }
                     
-                    // Render Citations if available
+                    // Message Text
+                    Text(messageText)
+                        .font(.system(size: 13.5))
+                        .foregroundColor(AvionicsTheme.ink)
+                        .lineSpacing(4)
+                    
+                    // Regulatory Citations as Flight Progress Strips
                     if !message.citations.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(language == .arabic ? "مراجع اللائحة (Grounding Citations):" : "Regulatory Citations:")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.blue)
+                            HStack(spacing: 4) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(AvionicsTheme.mint)
+                                Text(language == .arabic ? "مراجع اللائحة المُستند إليها:" : "GROUNDED CITATIONS:")
+                                    .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.mint)
+                            }
                             
                             ForEach(message.citations) { citation in
                                 CitationCardView(citation: citation, language: language)
                             }
                         }
+                        .padding(.top, 2)
                     }
                 }
-                .padding(14)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.primary.opacity(0.04))
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AvionicsTheme.panel)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AvionicsTheme.line, lineWidth: 1)
                         )
                 )
-
-                Spacer(minLength: 40)
-            } else {
+                // Distinct Left Accent Stripe (captadel.com style: cyan for grounded, amber for refusal)
+                .overlay(
+                    Rectangle()
+                        .fill(isRefusal ? AvionicsTheme.amber : AvionicsTheme.cyan)
+                        .frame(width: 3),
+                    alignment: .leading
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        } else {
+            // Pilot Query Bubble
+            HStack {
                 Spacer(minLength: 40)
                 
-                Text(message.text)
-                    .font(.system(size: 14.5, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(LinearGradient(colors: [Color.blue, Color(red: 0.1, green: 0.4, blue: 0.9)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    )
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Text(language == .arabic ? "استفسار الطيار" : "PILOT QUERY")
+                            .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.cyan)
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .font(.system(size: 8))
+                            .foregroundColor(AvionicsTheme.cyan)
+                    }
+                    
+                    Text(message.text)
+                        .font(.system(size: 13.5, weight: .medium))
+                        .foregroundColor(AvionicsTheme.ink)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AvionicsTheme.panel2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(AvionicsTheme.line, lineWidth: 1)
+                        )
+                )
             }
         }
     }
@@ -253,65 +383,83 @@ struct MessageRowView: View {
     }
 }
 
-// MARK: - Voice Assistant Modal
-struct VoiceAssistantModalView: View {
+// MARK: - Cockpit Voice Comms Modal
+struct CockpitVoiceAssistantModalView: View {
     @ObservedObject var aiService: CaptainAdelAIService
     let language: AppLanguage
     @Environment(\.dismiss) private var dismiss
     @State private var isListening: Bool = true
-    @State private var recognizedSpeech: String = ""
     
     var body: some View {
-        VStack(spacing: 30) {
-            HStack {
-                Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.top, 20)
-            .padding(.horizontal, 20)
+        ZStack {
+            AvionicsTheme.bg.ignoresSafeArea()
             
-            VStack(spacing: 8) {
-                Text(language == .arabic ? "كابتن عادل يستمع إليك..." : "Captain Adel is listening...")
-                    .font(.title2.weight(.bold))
-                Text(language == .arabic ? "تحدث باللغة العربية أو الإنجليزية لسؤال عن الطيران" : "Speak in English or Arabic to ask any aviation question")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            // Audio Waveform Animation
-            AudioWaveformView(isListening: isListening)
-                .frame(height: 80)
-            
-            ZStack {
-                Circle()
-                    .fill(Color.blue.opacity(0.15))
-                    .frame(width: 100, height: 100)
-                
-                Button(action: {
-                    isListening.toggle()
-                }) {
-                    ZStack {
-                        Circle()
-                            .fill(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 80, height: 80)
-                        Image(systemName: isListening ? "mic.fill" : "mic.slash.fill")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
+            VStack(spacing: 24) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Text("COM 1 · FREQ 121.500")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.cyan)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(AvionicsTheme.cyan.opacity(0.12))
+                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1))
+                    }
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(AvionicsTheme.inkDim)
+                            .padding(8)
+                            .background(Circle().fill(AvionicsTheme.panel2))
                     }
                 }
+                .padding(.top, 16)
+                .padding(.horizontal, 20)
+                
+                VStack(spacing: 6) {
+                    Text(language == .arabic ? "كابتن عادل على موجة الاتصال..." : "CAPT. ADEL // COMMS OPEN")
+                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.ink)
+                    
+                    Text(language == .arabic ? "تحدث باللغة العربية أو الإنجليزية لسؤال عن لوائح الطيران" : "Speak in English or Arabic to query GACAR regulatory corpus")
+                        .font(.system(size: 12))
+                        .foregroundColor(AvionicsTheme.inkDim)
+                }
+                
+                Spacer()
+                
+                // Animated Audio Waveform in Cyan
+                AudioWaveformView(isListening: isListening)
+                    .frame(height: 70)
+                    .padding(.horizontal, 40)
+                
+                ZStack {
+                    Circle()
+                        .stroke(AvionicsTheme.teal.opacity(0.4), lineWidth: 2)
+                        .frame(width: 90, height: 90)
+                    
+                    Button(action: {
+                        isListening.toggle()
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(isListening ? AvionicsTheme.cyan : AvionicsTheme.panel2)
+                                .frame(width: 72, height: 72)
+                            Image(systemName: isListening ? "mic.fill" : "mic.slash.fill")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(isListening ? AvionicsTheme.bg : AvionicsTheme.inkDim)
+                        }
+                    }
+                }
+                
+                Text(language == .arabic ? "اضغط للمقاطعة أو إغلاق الميكروفون" : "TAP MIC TO TOGGLE TRANSMISSION")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(AvionicsTheme.inkDim)
+                
+                Spacer()
             }
-            
-            Text(language == .arabic ? "اضغط للمقاطعة أو الإنهاء" : "Tap button to toggle mic")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            Spacer()
         }
+        .preferredColorScheme(.dark)
     }
 }
