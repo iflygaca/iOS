@@ -1,11 +1,19 @@
 import SwiftUI
 import Combine
+import Foundation
 
 @MainActor
 final class CaptainAdelAIService: ObservableObject {
     @Published var messages: [ChatMessage] = []
     @Published var isThinking: Bool = false
     @Published var activeLanguage: AppLanguage = .english
+    
+    // AI Configuration & Live Telemetry
+    @Published var config: AIProviderConfig
+    @Published var connectionStatus: AIConnectionStatus = .offline
+    @Published var fallbackBannerReason: String? = nil
+    
+    private let configStorageKey = "com.flygaca.captainadel.aiconfig"
     
     // Curated GACAR Parts database for reference tab
     let gacarParts: [GACARPart] = [
@@ -126,6 +134,16 @@ final class CaptainAdelAIService: ObservableObject {
     ]
     
     init() {
+        // Load saved configuration
+        if let savedData = UserDefaults.standard.data(forKey: "com.flygaca.captainadel.aiconfig"),
+           let decoded = try? JSONDecoder().decode(AIProviderConfig.self, from: savedData) {
+            self.config = decoded
+        } else {
+            self.config = .default
+        }
+        
+        self.connectionStatus = (self.config.provider == .offlineDoctrine) ? .offline : .connecting
+        
         // Welcome message reflecting captadel.com doctrine
         let welcomeEn = """
         Captain Adel (**ADEL-1**) online. Independent AI flight instructor for Saudi civil aviation.
@@ -157,8 +175,109 @@ final class CaptainAdelAIService: ObservableObject {
         )
         
         messages.append(welcomeMsg)
+        
+        if config.provider != .offlineDoctrine {
+            Task {
+                await checkConnectionHealth()
+            }
+        }
+    }
+    
+    // Update and persist settings
+    func updateConfig(_ newConfig: AIProviderConfig, apiKey: String?) {
+        self.config = newConfig
+        if let encoded = try? JSONEncoder().encode(newConfig) {
+            UserDefaults.standard.set(encoded, forKey: configStorageKey)
+        }
+        
+        let keychainKey = "ai_api_key_\(newConfig.provider.rawValue)"
+        if let key = apiKey, !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            KeychainHelper.shared.save(key: keychainKey, value: key.trimmingCharacters(in: .whitespacesAndNewlines))
+        } else {
+            KeychainHelper.shared.delete(key: keychainKey)
+        }
+        
+        self.fallbackBannerReason = nil
+        if newConfig.provider == .offlineDoctrine {
+            self.connectionStatus = .offline
+        } else {
+            Task {
+                await checkConnectionHealth()
+            }
+        }
+    }
+    
+    func getApiKey(for provider: AIProviderType) -> String? {
+        return KeychainHelper.shared.get(key: "ai_api_key_\(provider.rawValue)")
+    }
+    
+    // Check connection health / ping
+    func checkConnectionHealth() async {
+        guard config.provider != .offlineDoctrine else {
+            self.connectionStatus = .offline
+            return
+        }
+        
+        self.connectionStatus = .connecting
+        let apiKey = getApiKey(for: config.provider)
+        let result = await testConnection(config: self.config, apiKey: apiKey)
+        if result.success {
+            self.connectionStatus = .connected(latencyMs: result.latencyMs)
+        } else {
+            self.connectionStatus = .fallback(reason: result.message)
+        }
+    }
+    
+    // Test connection without mutating state
+    func testConnection(config: AIProviderConfig, apiKey: String?) async -> (success: Bool, latencyMs: Int, message: String) {
+        guard config.provider != .offlineDoctrine else {
+            return (true, 1, "Offline GACAR Doctrine active. Zero latency.")
+        }
+        
+        guard let url = URL(string: config.endpointURL), url.scheme != nil, url.host != nil else {
+            return (false, 0, "Invalid endpoint URL format")
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 8
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        if let token = apiKey, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        // Minimal ping payload
+        let pingPayload: [String: Any] = [
+            "model": config.modelName,
+            "messages": [
+                ["role": "user", "content": "ping"]
+            ],
+            "max_tokens": 1
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: pingPayload)
+        
+        let start = CFAbsoluteTimeGetCurrent()
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            let elapsed = Int((CFAbsoluteTimeGetCurrent() - start) * 1000)
+            if let http = response as? HTTPURLResponse {
+                if (200...299).contains(http.statusCode) {
+                    return (true, max(1, elapsed), "Connected (HTTP \(http.statusCode))")
+                } else if http.statusCode == 401 {
+                    return (false, elapsed, "Authentication failed (401 Unauthorized). Check API Key.")
+                } else {
+                    return (false, elapsed, "Server returned HTTP \(http.statusCode)")
+                }
+            }
+            return (true, max(1, elapsed), "Connected")
+        } catch {
+            let elapsed = Int((CFAbsoluteTimeGetCurrent() - start) * 1000)
+            return (false, elapsed, error.localizedDescription)
+        }
     }
 
+    // Main Chat Message Sending
     func sendMessage(_ userText: String) async {
         guard !userText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         
@@ -167,8 +286,215 @@ final class CaptainAdelAIService: ObservableObject {
         
         isThinking = true
         
+        // 1. If Offline Doctrine mode selected, run local simulator
+        if config.provider == .offlineDoctrine {
+            await runOfflineResponse(for: userText)
+            return
+        }
+        
+        // 2. Online Mode: Try live stream; fallback to local grounding on failure
+        do {
+            try await runLiveStreamingResponse(for: userText)
+        } catch {
+            // Seamless offline fallback
+            self.fallbackBannerReason = "Cloud unavailable (\(error.localizedDescription)). Switched to local GACAR engine."
+            self.connectionStatus = .fallback(reason: error.localizedDescription)
+            await runOfflineResponse(for: userText)
+        }
+    }
+    
+    // Live Server-Sent Events / Stream Runner
+    private func runLiveStreamingResponse(for query: String) async throws {
+        guard let url = URL(string: config.endpointURL) else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 25
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        if let token = getApiKey(for: config.provider), !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        let systemPrompt = """
+        You are Captain Adel (ADEL-1), an authoritative AI flight instructor for Saudi civil aviation (GACAR).
+        DOCTRINE: CITE OR REFUSE.
+        Every statement must explicitly cite the GACAR Part and Section (e.g. §91.155, §61.103, §107.51).
+        If a question cannot be grounded in GACAR regulations, refuse honestly and direct the user to gaca.gov.sa instead of guessing.
+        """
+        
+        let payload: [String: Any] = [
+            "model": config.modelName,
+            "messages": [
+                ["role": "system", "content": systemPrompt],
+                ["role": "user", "content": query]
+            ],
+            "temperature": config.temperature,
+            "stream": true
+        ]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        
+        let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)
+        
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            throw NSError(domain: "CaptainAdelAI", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode)"])
+        }
+        
+        var botMessage = ChatMessage(
+            sender: .captainAdel,
+            text: "",
+            arabicText: "",
+            citations: [],
+            isStreaming: true
+        )
+        messages.append(botMessage)
+        isThinking = false
+        
+        var accumulatedText = ""
+        
+        for try await line in asyncBytes.lines {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            
+            if trimmed.hasPrefix("data: ") {
+                let dataContent = String(trimmed.dropFirst(6)).trimmingCharacters(in: .whitespacesAndNewlines)
+                if dataContent == "[DONE]" { break }
+                
+                if let data = dataContent.data(using: .utf8),
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    
+                    // OpenAI-style choices delta
+                    if let choices = json["choices"] as? [[String: Any]],
+                       let first = choices.first,
+                       let delta = first["delta"] as? [String: Any],
+                       let chunk = delta["content"] as? String {
+                        accumulatedText += chunk
+                    }
+                    // Hugging Face token text style
+                    else if let tokenObj = json["token"] as? [String: Any],
+                            let chunk = tokenObj["text"] as? String {
+                        accumulatedText += chunk
+                    }
+                }
+            } else if let data = trimmed.data(using: .utf8),
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let chunk = json["text"] as? String {
+                accumulatedText += chunk
+            }
+            
+            // Extract citations dynamically as text arrives
+            let citations = extractCitations(from: accumulatedText)
+            
+            if let lastIdx = messages.indices.last {
+                messages[lastIdx].text = accumulatedText
+                messages[lastIdx].arabicText = accumulatedText
+                messages[lastIdx].citations = citations
+            }
+        }
+        
+        if let lastIdx = messages.indices.last {
+            messages[lastIdx].isStreaming = false
+        }
+    }
+    
+    // Dynamic Citation Extractor
+    private func extractCitations(from text: String) -> [GACARCitation] {
+        var results: [GACARCitation] = []
+        
+        if text.contains("91.155") {
+            results.append(GACARCitation(
+                partNumber: "GACAR Part 91",
+                title: "Basic VFR Weather Minimums",
+                arabicTitle: "الحد الأدنى لطقس الطيران البصري",
+                sectionNumber: "91.155",
+                verbatimSnippet: "GACAR §91.155: Flight visibility not less than 5 km below 3,050 m AMSL; cloud clearance 300 m vertically, 1,500 m horizontally.",
+                arabicVerbatimSnippet: "GACAR §91.155: الرؤية الجوية لا تقل عن 5 كم تحت 3,050 متراً AMSL، مع مسافة من السحب 300 متر رأسياً و1,500 متر أفقياً.",
+                category: .operations
+            ))
+        }
+        
+        if text.contains("91.151") {
+            results.append(GACARCitation(
+                partNumber: "GACAR Part 91",
+                title: "Fuel Requirements for Flight in VFR Conditions",
+                arabicTitle: "متطلبات الوقود للطيران البصري",
+                sectionNumber: "91.151",
+                verbatimSnippet: "GACAR §91.151: Day VFR requires at least 30 minutes reserve; Night VFR requires at least 45 minutes reserve at normal cruising speed.",
+                arabicVerbatimSnippet: "GACAR §91.151: يتطلب VFR نهاراً احتياطي 30 دقيقة على الأقل، وليلاً 45 دقيقة بسرعة العبور العادية.",
+                category: .operations
+            ))
+        }
+        
+        if text.contains("91.119") {
+            results.append(GACARCitation(
+                partNumber: "GACAR Part 91",
+                title: "Minimum Safe Altitudes: General",
+                arabicTitle: "الحد الأدنى للارتفاعات الآمنة العامة",
+                sectionNumber: "91.119",
+                verbatimSnippet: "GACAR §91.119: 1,000 ft above highest obstacle within 600 m radius over congested areas; 500 ft elsewhere.",
+                arabicVerbatimSnippet: "GACAR §91.119: 1,000 قدم فوق أعلى عائق ضمن 600 متر بالمناطق المزدحمة؛ 500 قدم في غيرها.",
+                category: .operations
+            ))
+        }
+        
+        if text.contains("91.117") {
+            results.append(GACARCitation(
+                partNumber: "GACAR Part 91",
+                title: "Aircraft Speed Limitations",
+                arabicTitle: "القيود على السرعات الجوية للطائرات",
+                sectionNumber: "91.117",
+                verbatimSnippet: "GACAR §91.117: Maximum indicated airspeed 250 knots below 3,050 m (10,000 ft) AMSL.",
+                arabicVerbatimSnippet: "GACAR §91.117: السرعة الجوية المبينة القصوى 250 عقدة تحت 3,050 متراً AMSL.",
+                category: .operations
+            ))
+        }
+        
+        if text.contains("61.57") {
+            results.append(GACARCitation(
+                partNumber: "GACAR Part 61",
+                title: "Recent Flight Experience: Pilot in Command",
+                arabicTitle: "الخبرة الجوية الحديثة لقائد الطائرة",
+                sectionNumber: "61.57",
+                verbatimSnippet: "GACAR §61.57: At least 3 takeoffs and 3 landings within preceding 90 days; night carriage requires full-stop landings.",
+                arabicVerbatimSnippet: "GACAR §61.57: 3 إقلاعات و3 هبوطات على الأقل خلال الـ 90 يوماً الماضية، مع اشتراط التوقف الكامل ليلاً.",
+                category: .licensing
+            ))
+        }
+        
+        if text.contains("61.103") {
+            results.append(GACARCitation(
+                partNumber: "GACAR Part 61",
+                title: "Eligibility Requirements: Private Pilot",
+                arabicTitle: "شروط الأهلية لرخصة طيار خاص",
+                sectionNumber: "61.103",
+                verbatimSnippet: "GACAR §61.103: Minimum age 17, Class 2 medical certificate, and 40 flight hours logged.",
+                arabicVerbatimSnippet: "GACAR §61.103: سن 17 عاماً، شهادة طبية فئة 2، و40 ساعة طيران مسجلة.",
+                category: .licensing
+            ))
+        }
+        
+        if text.contains("107.51") {
+            results.append(GACARCitation(
+                partNumber: "GACAR Part 107",
+                title: "sUAS Operating Limitations",
+                arabicTitle: "القيود التشغيلية للطائرات بدون طيار",
+                sectionNumber: "107.51",
+                verbatimSnippet: "GACAR §107.51: Maximum groundspeed 87 knots (100 mph), maximum altitude 400 ft AGL.",
+                arabicVerbatimSnippet: "GACAR §107.51: أقصى سرعة أرضية 87 عقدة، وأقصى ارتفاع 400 قدم AGL.",
+                category: .uas
+            ))
+        }
+        
+        return results
+    }
+
+    // Local Grounding Simulator (Doctrine Mode)
+    private func runOfflineResponse(for userText: String) async {
         // Brief pause simulating vector RAG retrieval over 74 parts
-        try? await Task.sleep(nanoseconds: 600_000_000)
+        try? await Task.sleep(nanoseconds: 400_000_000)
         
         let responseTuple = generateGroundingResponse(for: userText)
         
@@ -202,7 +528,7 @@ final class CaptainAdelAIService: ObservableObject {
                 messages[lastIdx].arabicText = arSubstring
             }
             
-            try? await Task.sleep(nanoseconds: 20_000_000)
+            try? await Task.sleep(nanoseconds: 18_000_000)
         }
         
         if let lastIdx = messages.indices.last {

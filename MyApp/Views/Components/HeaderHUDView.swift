@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct HeaderHUDView: View {
+    @ObservedObject var aiService: CaptainAdelAIService
     @Binding var currentLanguage: AppLanguage
     let onVoiceModeTap: () -> Void
+    let onSettingsTap: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,7 +28,7 @@ struct HeaderHUDView: View {
 
                         // Live status dot
                         Circle()
-                            .fill(AvionicsTheme.mint)
+                            .fill(aiService.config.provider == .offlineDoctrine ? AvionicsTheme.mint : AvionicsTheme.cyan)
                             .frame(width: 11, height: 11)
                             .overlay(Circle().stroke(AvionicsTheme.bg, lineWidth: 2))
                             .offset(x: 17, y: 17)
@@ -49,19 +51,46 @@ struct HeaderHUDView: View {
                         }
 
                         HStack(spacing: 4) {
-                            PulsingDotView(color: AvionicsTheme.mint, size: 6)
-                            Text(currentLanguage == .arabic ? "مدرّب طيران ذكي • متصل" : "AI FLIGHT INSTRUCTOR · ONLINE")
+                            PulsingDotView(
+                                color: aiService.config.provider == .offlineDoctrine ? AvionicsTheme.mint : AvionicsTheme.cyan,
+                                size: 6
+                            )
+                            Text(statusText)
                                 .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
-                                .foregroundColor(AvionicsTheme.mint)
+                                .foregroundColor(aiService.config.provider == .offlineDoctrine ? AvionicsTheme.mint : AvionicsTheme.cyan)
                         }
                     }
                 }
 
                 Spacer()
 
-                // Right Controls: Comms Voice + Language Switcher
+                // Right Controls: Comms Settings + Voice + Language Switcher
                 HStack(spacing: 8) {
-                    Button(action: onVoiceModeTap) {
+                    // AI Comms Engine Config Button
+                    Button(action: {
+                        Haptics.impact(.light)
+                        onSettingsTap()
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(AvionicsTheme.panel2)
+                                .frame(width: 34, height: 34)
+                            Circle()
+                                .stroke(aiService.config.provider == .offlineDoctrine ? AvionicsTheme.line : AvionicsTheme.cyan.opacity(0.8), lineWidth: 1)
+                                .frame(width: 34, height: 34)
+
+                            Image(systemName: "antenna.radiowaves.left.and.right")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(aiService.config.provider == .offlineDoctrine ? AvionicsTheme.inkDim : AvionicsTheme.cyan)
+                        }
+                    }
+                    .buttonStyle(.pressable)
+
+                    // Voice Mode Button
+                    Button(action: {
+                        Haptics.impact(.medium)
+                        onVoiceModeTap()
+                    }) {
                         ZStack {
                             Circle()
                                 .fill(AvionicsTheme.panel2)
@@ -115,7 +144,7 @@ struct HeaderHUDView: View {
             .padding(.vertical, 8)
             .background(AvionicsTheme.bg)
 
-            // Cockpit Telemetry Grid Ribbon (Exact match to captadel.com)
+            // Cockpit Telemetry Grid Ribbon
             HStack(spacing: 0) {
                 telemetryCell(
                     label: currentLanguage == .arabic ? "الإسناد" : "GROUNDING",
@@ -137,11 +166,17 @@ struct HeaderHUDView: View {
                     .background(AvionicsTheme.line)
                     .frame(height: 24)
 
-                telemetryCell(
-                    label: currentLanguage == .arabic ? "القاعدة" : "BASE",
-                    val: "OERK · RIYADH",
-                    color: AvionicsTheme.amber
-                )
+                Button(action: {
+                    Haptics.impact(.light)
+                    onSettingsTap()
+                }) {
+                    telemetryCell(
+                        label: currentLanguage == .arabic ? "المحرّك" : "ENGINE",
+                        val: aiService.config.provider.shortBadge,
+                        color: aiService.config.provider == .offlineDoctrine ? AvionicsTheme.mint : AvionicsTheme.cyan
+                    )
+                }
+                .buttonStyle(.plain)
 
                 Divider()
                     .background(AvionicsTheme.line)
@@ -171,6 +206,19 @@ struct HeaderHUDView: View {
                     .foregroundColor(AvionicsTheme.line),
                 alignment: .bottom
             )
+        }
+    }
+
+    private var statusText: String {
+        switch aiService.connectionStatus {
+        case .offline:
+            return currentLanguage == .arabic ? "مدرّب ذكي • محلي" : "LOCAL ENGINE · ARMED"
+        case .connecting:
+            return currentLanguage == .arabic ? "جارِ الاتصال..." : "CONNECTING..."
+        case .connected(let ms):
+            return currentLanguage == .arabic ? "سحابي • \(ms)ms" : "CLOUD LIVE · \(ms)MS"
+        case .fallback:
+            return currentLanguage == .arabic ? "احتياطي محلي" : "LOCAL FALLBACK"
         }
     }
 

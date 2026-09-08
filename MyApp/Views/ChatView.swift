@@ -5,6 +5,7 @@ struct ChatView: View {
     @Binding var currentLanguage: AppLanguage
     @State private var inputText: String = ""
     @State private var showVoiceModal: Bool = false
+    @State private var showSettingsModal: Bool = false
     @FocusState private var isInputFocused: Bool
 
     // Exact prompt pills matching captadel.com queries
@@ -29,11 +30,48 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             // 1. Cockpit Header HUD
-            HeaderHUDView(currentLanguage: $currentLanguage, onVoiceModeTap: {
-                Haptics.light()
-                showVoiceModal = true
-            })
+            HeaderHUDView(
+                aiService: aiService,
+                currentLanguage: $currentLanguage,
+                onVoiceModeTap: {
+                    Haptics.light()
+                    showVoiceModal = true
+                },
+                onSettingsTap: {
+                    Haptics.light()
+                    showSettingsModal = true
+                }
+            )
 
+            // 1b. Fallback Alert Banner (if cloud error occurred)
+            if let reason = aiService.fallbackBannerReason {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(AvionicsTheme.amber)
+                        .font(.system(size: 11))
+                    Text(reason)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.amber)
+                        .lineLimit(1)
+                    Spacer()
+                    Button(action: {
+                        Haptics.light()
+                        showSettingsModal = true
+                    }) {
+                        Text("COMMS")
+                            .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.cyan)
+                            .underline()
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(AvionicsTheme.amber.opacity(0.12))
+                .overlay(
+                    Rectangle().frame(height: 1).foregroundColor(AvionicsTheme.amber.opacity(0.3)),
+                    alignment: .bottom
+                )
+            }
             // 2. GACAR Running Tape Ticker
             GACARTickerTapeView()
 
@@ -180,6 +218,9 @@ struct ChatView: View {
         .environment(\.layoutDirection, currentLanguage.isRTL ? .rightToLeft : .leftToRight)
         .sheet(isPresented: $showVoiceModal) {
             CockpitVoiceAssistantModalView(aiService: aiService, language: currentLanguage)
+        }
+        .sheet(isPresented: $showSettingsModal) {
+            AISettingsSheet(aiService: aiService, isPresented: $showSettingsModal)
         }
     }
 
