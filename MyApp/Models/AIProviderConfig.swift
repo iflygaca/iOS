@@ -1,14 +1,14 @@
 import Foundation
 
-public enum AIProviderType: String, CaseIterable, Identifiable, Codable {
+enum AIProviderType: String, CaseIterable, Identifiable, Codable {
     case offlineDoctrine = "offline"
     case huggingFace = "huggingface"
     case flyGACA = "flygaca"
     case openAICompatible = "openai"
     
-    public var id: String { rawValue }
+    var id: String { rawValue }
     
-    public var displayName: String {
+    var displayName: String {
         switch self {
         case .offlineDoctrine:
             return "Offline GACAR Doctrine (Local)"
@@ -21,7 +21,7 @@ public enum AIProviderType: String, CaseIterable, Identifiable, Codable {
         }
     }
     
-    public var shortBadge: String {
+    var shortBadge: String {
         switch self {
         case .offlineDoctrine:
             return "OFFLINE"
@@ -34,7 +34,7 @@ public enum AIProviderType: String, CaseIterable, Identifiable, Codable {
         }
     }
     
-    public var defaultEndpoint: String {
+    var defaultEndpoint: String {
         switch self {
         case .offlineDoctrine:
             return ""
@@ -47,7 +47,7 @@ public enum AIProviderType: String, CaseIterable, Identifiable, Codable {
         }
     }
     
-    public var defaultModel: String {
+    var defaultModel: String {
         switch self {
         case .offlineDoctrine:
             return "GACAR-74-Local"
@@ -61,13 +61,13 @@ public enum AIProviderType: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-public enum AIConnectionStatus: Equatable {
+enum AIConnectionStatus: Equatable {
     case offline
     case connecting
     case connected(latencyMs: Int)
     case fallback(reason: String)
     
-    public var label: String {
+    var label: String {
         switch self {
         case .offline:
             return "OFFLINE · LOCAL"
@@ -81,14 +81,14 @@ public enum AIConnectionStatus: Equatable {
     }
 }
 
-public struct AIProviderConfig: Codable, Equatable {
-    public var provider: AIProviderType
-    public var endpointURL: String
-    public var modelName: String
-    public var temperature: Double
-    public var streamEnabled: Bool
+struct AIProviderConfig: Codable, Equatable {
+    var provider: AIProviderType
+    var endpointURL: String
+    var modelName: String
+    var temperature: Double
+    var streamEnabled: Bool
     
-    public static var `default`: AIProviderConfig {
+    static var `default`: AIProviderConfig {
         AIProviderConfig(
             provider: .offlineDoctrine,
             endpointURL: "",
@@ -98,4 +98,3 @@ public struct AIProviderConfig: Codable, Equatable {
         )
     }
 }
-

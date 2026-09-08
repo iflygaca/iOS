@@ -3,4 +3,9 @@ DerivedData/
 build/
 *.xcuserstate
 xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
 

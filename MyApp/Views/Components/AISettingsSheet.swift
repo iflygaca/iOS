@@ -46,6 +46,80 @@ struct AISettingsSheet: View {
                         }
                         .padding(.bottom, 2)
                         
+                        // FL380 Flight Mode Tactical Switch
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                HStack(spacing: 8) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(aiService.isFL380FlightMode ? AvionicsTheme.cyan.opacity(0.2) : AvionicsTheme.panel2)
+                                            .frame(width: 32, height: 32)
+                                        Image(systemName: "airplane")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundColor(aiService.isFL380FlightMode ? AvionicsTheme.cyan : AvionicsTheme.inkDim)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("FL380 FLIGHT MODE")
+                                            .font(.system(size: 12, weight: .heavy, design: .monospaced))
+                                            .foregroundColor(AvionicsTheme.ink)
+                                        Text("100% Offline Semantic Vector Search")
+                                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                            .foregroundColor(aiService.isFL380FlightMode ? AvionicsTheme.mint : AvionicsTheme.inkDim)
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: Binding(
+                                    get: { aiService.isFL380FlightMode },
+                                    set: { _ in
+                                        Haptics.impact(.medium)
+                                        withAnimation(.spring(response: 0.3)) {
+                                            aiService.toggleFL380FlightMode()
+                                        }
+                                    }
+                                ))
+                                .labelsHidden()
+                                .tint(AvionicsTheme.cyan)
+                            }
+                            
+                            HStack(spacing: 6) {
+                                Text("CORPUS: 74 PARTS")
+                                    .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(AvionicsTheme.panel2)
+                                    .foregroundColor(AvionicsTheme.cyan)
+                                    .cornerRadius(3)
+                                
+                                Text("LATENCY: < 5MS")
+                                    .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(AvionicsTheme.panel2)
+                                    .foregroundColor(AvionicsTheme.mint)
+                                    .cornerRadius(3)
+                                
+                                Text(aiService.isFL380FlightMode ? "DATA: OFFLINE" : "DATA: READY")
+                                    .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(AvionicsTheme.panel2)
+                                    .foregroundColor(aiService.isFL380FlightMode ? AvionicsTheme.mint : AvionicsTheme.amber)
+                                    .cornerRadius(3)
+                            }
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(aiService.isFL380FlightMode ? AvionicsTheme.panel2 : AvionicsTheme.panel)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(aiService.isFL380FlightMode ? AvionicsTheme.cyan.opacity(0.8) : AvionicsTheme.line, lineWidth: 1.2)
+                                )
+                        )
+                        
                         // Provider Selection
                         VStack(alignment: .leading, spacing: 8) {
                             Text("SELECT PRIMARY ENGINE")

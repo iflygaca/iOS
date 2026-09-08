@@ -35,6 +35,7 @@ struct ChatMessage: Identifiable, Equatable {
     let timestamp: Date
     var citations: [GACARCitation]
     var isStreaming: Bool
+    var telemetryTag: String?
 
     init(
         id: UUID = UUID(),
@@ -43,7 +44,8 @@ struct ChatMessage: Identifiable, Equatable {
         arabicText: String? = nil,
         timestamp: Date = Date(),
         citations: [GACARCitation] = [],
-        isStreaming: Bool = false
+        isStreaming: Bool = false,
+        telemetryTag: String? = nil
     ) {
         self.id = id
         self.sender = sender
@@ -52,6 +54,7 @@ struct ChatMessage: Identifiable, Equatable {
         self.timestamp = timestamp
         self.citations = citations
         self.isStreaming = isStreaming
+        self.telemetryTag = telemetryTag
     }
 }
 

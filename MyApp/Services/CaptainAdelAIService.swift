@@ -12,129 +12,18 @@ final class CaptainAdelAIService: ObservableObject {
     @Published var config: AIProviderConfig
     @Published var connectionStatus: AIConnectionStatus = .offline
     @Published var fallbackBannerReason: String? = nil
+    @Published var isFL380FlightMode: Bool = false
     
     private let configStorageKey = "com.flygaca.captainadel.aiconfig"
+    private let fl380StorageKey = "com.flygaca.captainadel.fl380mode"
     
-    // Curated GACAR Parts database for reference tab
-    let gacarParts: [GACARPart] = [
-        GACARPart(
-            id: "61",
-            partNumber: "GACAR Part 61",
-            titleEn: "Certification: Pilots, Flight Instructors, and Ground Instructors",
-            titleAr: "إصدار الشهادات: الطيارون ومدربو الطيران ومدربو الأرض",
-            category: .licensing,
-            summaryEn: "Defines requirements for issuing Private Pilot (PPL), Commercial Pilot (CPL), Airline Transport Pilot (ATPL), instrument ratings, and instructor certificates in Saudi Arabia.",
-            summaryAr: "يتضمن شروط وإجراءات إصدار رخص الطيار الخاص، التجاري، طيار النقل الجوي، وأهليات الطيران الآلي والتدريب في المملكة العربية السعودية.",
-            keySections: [
-                GACARSection(
-                    sectionCode: "61.103",
-                    titleEn: "Eligibility Requirements for Private Pilot Certificate",
-                    titleAr: "شروط الأهلية للحصول على رخصة طيار خاص",
-                    contentEn: "Applicant must be at least 17 years old, read/write English, hold at least a Class 2 Medical Certificate issued under GACAR Part 67, and log a minimum of 40 hours of flight time.",
-                    contentAr: "يجب ألا يقل عمر المتقدم عن 17 عاماً، وأن يتقن قراءة وكتابة اللغة الإنجليزية، ويحمل شهادة طبية من الفئة الثانية وفق GACAR Part 67، وسجل 40 ساعة طيران كحد أدنى."
-                ),
-                GACARSection(
-                    sectionCode: "61.57",
-                    titleEn: "Recent Flight Experience: Pilot in Command",
-                    titleAr: "الخبرة الجوية الحديثة: قائد الطائرة",
-                    contentEn: "To carry passengers, pilot must have completed at least 3 takeoffs and 3 landings within the preceding 90 days in the same category, class, and type of aircraft. Night carriage requires full-stop landings.",
-                    contentAr: "لنقل الركاب، يجب على الطيار إكمال 3 إقلاعات و3 هبوطات على الأقل خلال الـ 90 يوماً الماضية على نفس فئة وفئة ونوع الطائرة، مع اشتراط الهبوط الكامل ليلاً."
-                ),
-                GACARSection(
-                    sectionCode: "61.129",
-                    titleEn: "Aeronautical Experience for Commercial Pilot Certificate",
-                    titleAr: "الخبرة الجوية لرخصة طيار تجاري",
-                    contentEn: "Requires at least 200 hours of flight time for airplane category, including 100 hours of pilot-in-command (PIC) time and 50 hours of cross-country flight time.",
-                    contentAr: "تتطلب 200 ساعة طيران على الأقل لفئة الطائرات، تشمل 100 ساعة كقائد طائرة (PIC) و50 ساعة طيران عبر البلاد."
-                )
-            ]
-        ),
-        GACARPart(
-            id: "67",
-            partNumber: "GACAR Part 67",
-            titleEn: "Medical Standards and Certification",
-            titleAr: "المعايير الطبية وإصدار الشهادات الطبية",
-            category: .medical,
-            summaryEn: "Outlines medical requirements and validity periods for Class 1 (Commercial/Airline), Class 2 (Private Pilot), and Class 3 (Air Traffic Control) medical certificates.",
-            summaryAr: "يحدد المعايير الطبية وفترات الصلاحية للشهادات الطبية من الفئة الأولى (تجاري/نقل جوي)، الفئة الثانية (طيار خاص)، والفئة الثالثة (مراقبة جوية).",
-            keySections: [
-                GACARSection(
-                    sectionCode: "67.13",
-                    titleEn: "Class 1 Medical Standards & Duration",
-                    titleAr: "معايير وصلاحية الشهادة الطبية الفئة الأولى",
-                    contentEn: "Valid for 12 calendar months for operations under 40 years of age, and 6 calendar months for pilots 40 years of age or older engaged in commercial operations.",
-                    contentAr: "صالحة لمدة 12 شهراً تقويمياً للعمليات لمن هم دون سن 40 عاماً، و6 أشهر تقويمية للطيارين البالغين 40 عاماً أو أكثر في العمليات التجارية."
-                ),
-                GACARSection(
-                    sectionCode: "67.23",
-                    titleEn: "Class 2 Medical Certificate Validity",
-                    titleAr: "صلاحية الشهادة الطبية الفئة الثانية",
-                    contentEn: "Valid for 60 calendar months (5 years) for pilots under 40, and 24 calendar months for pilots 40 years or older.",
-                    contentAr: "صالحة لمدة 60 شهراً (5 سنوات) للطيارين دون سن 40، و24 شهراً تقويمياً للطيارين البالغين 40 عاماً أو أكثر."
-                )
-            ]
-        ),
-        GACARPart(
-            id: "91",
-            partNumber: "GACAR Part 91",
-            titleEn: "General Operating and Flight Rules",
-            titleAr: "قواعد التشغيل والطيران العامة",
-            category: .operations,
-            summaryEn: "Fundamental flight rules in Saudi airspace, weather minima, fuel reserves for VFR/IFR, aircraft speed, altitude rules, and pilot responsibility.",
-            summaryAr: "قواعد الطيران الأساسية في المجال الجوي السعودي، حدود الطقس، احتياطي الوقود للـ VFR/IFR، السرعة الجوية، قواعد الارتفاعات، ومسؤولية قائد الطائرة.",
-            keySections: [
-                GACARSection(
-                    sectionCode: "91.155",
-                    titleEn: "Basic VFR Weather Minimums",
-                    titleAr: "الحد الأدنى لطقس الطيران البصري VFR",
-                    contentEn: "Below 3,050 m (10,000 ft) AMSL in controlled airspace, minimum flight visibility is 5 km clear of clouds, with cloud clearance of 300 m (1,000 ft) vertically and 1,500 m horizontally.",
-                    contentAr: "تحت 3,050 متراً (10,000 قدم) في الأجواء المراقبة، الحد الأدنى للرؤية 5 كم مع الابتعاد عن السحب 300 متر رأسياً و1,500 متر أفقياً."
-                ),
-                GACARSection(
-                    sectionCode: "91.151",
-                    titleEn: "Fuel Requirements for Flight in VFR Conditions",
-                    titleAr: "متطلبات الوقود للطيران في ظروف VFR",
-                    contentEn: "Requires fuel to fly to the first point of intended landing and then fly at least 30 minutes by day or 45 minutes by night at normal cruising speed.",
-                    contentAr: "يلزم وقود للوصول إلى الوجهة الأولى ثم مواصلة الطيران لمدة لا تقل عن 30 دقيقة نهاراً أو 45 دقيقة ليلاً بسرعة العبور العادية."
-                ),
-                GACARSection(
-                    sectionCode: "91.119",
-                    titleEn: "Minimum Safe Altitudes: General",
-                    titleAr: "الحد الأدنى للارتفاعات الآمنة",
-                    contentEn: "Over congested areas of a city, town, or settlement: 1,000 ft above the highest obstacle within a 600 m radius. Elsewhere: 500 ft above the surface.",
-                    contentAr: "فوق المناطق المزدحمة في المدن والقرى: 1,000 قدم فوق أعلى عائق ضمن دائرة نصف قطرها 600 متر. في باقي المناطق: 500 قدم عن السطح."
-                ),
-                GACARSection(
-                    sectionCode: "91.117",
-                    titleEn: "Aircraft Speed Limitations",
-                    titleAr: "حدود السرعة الجوية للطائرات",
-                    contentEn: "Limits indicated airspeed to 250 knots below 3,050 m (10,000 ft) AMSL unless otherwise authorized by GACA air traffic control.",
-                    contentAr: "يحدد السرعة الجوية المبينة بـ 250 عقدة كحد أقصى تحت ارتفاع 3,050 متراً (10,000 قدم) ما لم يُصرح بغير ذلك من GACA."
-                )
-            ]
-        ),
-        GACARPart(
-            id: "107",
-            partNumber: "GACAR Part 107",
-            titleEn: "Small Unmanned Aircraft Systems (sUAS / Drones)",
-            titleAr: "أنظمة الطائرات الصغيرة بدون طيار (الدرونز)",
-            category: .uas,
-            summaryEn: "Regulations governing remote pilot certification, operational limits for drones under 25kg, maximum altitude (400ft AGL), and airspace authorization in Saudi Arabia.",
-            summaryAr: "اللوائح التي تحكم إصدار شهادات الطيار عن بعد، والحدود التشغيلية للدرونز دون 25 كجم، والحد الأقصى للارتفاع (400 قدم)، وتصاريح المجال الجوي في السعودية.",
-            keySections: [
-                GACARSection(
-                    sectionCode: "107.51",
-                    titleEn: "sUAS Operating Limitations",
-                    titleAr: "القيود التشغيلية للطائرات بدون طيار",
-                    contentEn: "Maximum groundspeed of 87 knots (100 mph), maximum altitude of 400 feet above ground level (AGL), and must yield right-of-way to all manned aircraft.",
-                    contentAr: "الحد الأقصى للسرعة الأرضية 87 عقدة، والحد الأقصى للارتفاع 400 قدم فوق سطح الأرض (AGL)، ويجب إعطاء الأفضلية دائماً للطائرات المأهولة."
-                )
-            ]
-        )
-    ]
+    // Complete 74-Part Saudi Civil Aviation Corpus
+    var gacarParts: [GACARPart] {
+        GACARCorpusDatabase.allParts
+    }
     
     init() {
-        // Load saved configuration
+        // Load saved configuration & FL380 state
         if let savedData = UserDefaults.standard.data(forKey: "com.flygaca.captainadel.aiconfig"),
            let decoded = try? JSONDecoder().decode(AIProviderConfig.self, from: savedData) {
             self.config = decoded
@@ -142,7 +31,8 @@ final class CaptainAdelAIService: ObservableObject {
             self.config = .default
         }
         
-        self.connectionStatus = (self.config.provider == .offlineDoctrine) ? .offline : .connecting
+        self.isFL380FlightMode = UserDefaults.standard.bool(forKey: fl380StorageKey)
+        self.connectionStatus = (self.isFL380FlightMode || self.config.provider == .offlineDoctrine) ? .offline : .connecting
         
         // Welcome message reflecting captadel.com doctrine
         let welcomeEn = """
@@ -203,6 +93,23 @@ final class CaptainAdelAIService: ObservableObject {
         } else {
             Task {
                 await checkConnectionHealth()
+            }
+        }
+    }
+    
+    func toggleFL380FlightMode() {
+        isFL380FlightMode.toggle()
+        UserDefaults.standard.set(isFL380FlightMode, forKey: fl380StorageKey)
+        if isFL380FlightMode {
+            self.connectionStatus = .offline
+            self.fallbackBannerReason = nil
+        } else {
+            if config.provider != .offlineDoctrine {
+                Task {
+                    await checkConnectionHealth()
+                }
+            } else {
+                self.connectionStatus = .offline
             }
         }
     }
@@ -286,8 +193,8 @@ final class CaptainAdelAIService: ObservableObject {
         
         isThinking = true
         
-        // 1. If Offline Doctrine mode selected, run local simulator
-        if config.provider == .offlineDoctrine {
+        // 1. If FL380 Flight Mode or Offline Doctrine mode selected, run on-device vector retrieval
+        if isFL380FlightMode || config.provider == .offlineDoctrine {
             await runOfflineResponse(for: userText)
             return
         }
@@ -343,7 +250,7 @@ final class CaptainAdelAIService: ObservableObject {
             throw NSError(domain: "CaptainAdelAI", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "HTTP \(http.statusCode)"])
         }
         
-        var botMessage = ChatMessage(
+        let botMessage = ChatMessage(
             sender: .captainAdel,
             text: "",
             arabicText: "",
@@ -491,27 +398,26 @@ final class CaptainAdelAIService: ObservableObject {
         return results
     }
 
-    // Local Grounding Simulator (Doctrine Mode)
+    // Local Grounding Simulator (FL380 Semantic Vector Search Engine)
     private func runOfflineResponse(for userText: String) async {
-        // Brief pause simulating vector RAG retrieval over 74 parts
-        try? await Task.sleep(nanoseconds: 400_000_000)
-        
-        let responseTuple = generateGroundingResponse(for: userText)
+        // Fast on-device semantic vector retrieval across all 74 GACAR parts
+        let retrieval = GACARVectorSearchEngine.shared.retrieve(query: userText)
         
         var botMessage = ChatMessage(
             sender: .captainAdel,
             text: "",
             arabicText: "",
-            citations: responseTuple.citations,
-            isStreaming: true
+            citations: retrieval.citations,
+            isStreaming: true,
+            telemetryTag: retrieval.telemetryTag
         )
         messages.append(botMessage)
         isThinking = false
 
-        // Stream text chunk by chunk
-        let targetEnText = responseTuple.enText
-        let targetArText = responseTuple.arText
-        let step = 4
+        // Stream text chunk by chunk with avionics typewriter cadence
+        let targetEnText = retrieval.answerEn
+        let targetArText = retrieval.answerAr
+        let step = 6
         
         var currentEnIndex = 0
         var currentArIndex = 0
@@ -528,7 +434,7 @@ final class CaptainAdelAIService: ObservableObject {
                 messages[lastIdx].arabicText = arSubstring
             }
             
-            try? await Task.sleep(nanoseconds: 18_000_000)
+            try? await Task.sleep(nanoseconds: 12_000_000)
         }
         
         if let lastIdx = messages.indices.last {

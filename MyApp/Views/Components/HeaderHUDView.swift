@@ -64,8 +64,30 @@ struct HeaderHUDView: View {
 
                 Spacer()
 
-                // Right Controls: Comms Settings + Voice + Language Switcher
-                HStack(spacing: 8) {
+                // Right Controls: FL380 Mode + Comms Settings + Voice + Language
+                HStack(spacing: 7) {
+                    // FL380 Flight Mode Quick Toggle
+                    Button(action: {
+                        Haptics.impact(.medium)
+                        withAnimation(.spring(response: 0.3)) {
+                            aiService.toggleFL380FlightMode()
+                        }
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(aiService.isFL380FlightMode ? AvionicsTheme.cyan.opacity(0.18) : AvionicsTheme.panel2)
+                                .frame(width: 34, height: 34)
+                            Circle()
+                                .stroke(aiService.isFL380FlightMode ? AvionicsTheme.cyan : AvionicsTheme.line, lineWidth: 1.2)
+                                .frame(width: 34, height: 34)
+
+                            Image(systemName: "airplane")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(aiService.isFL380FlightMode ? AvionicsTheme.cyan : AvionicsTheme.inkDim)
+                        }
+                    }
+                    .buttonStyle(.pressable)
+
                     // AI Comms Engine Config Button
                     Button(action: {
                         Haptics.impact(.light)
@@ -172,8 +194,8 @@ struct HeaderHUDView: View {
                 }) {
                     telemetryCell(
                         label: currentLanguage == .arabic ? "المحرّك" : "ENGINE",
-                        val: aiService.config.provider.shortBadge,
-                        color: aiService.config.provider == .offlineDoctrine ? AvionicsTheme.mint : AvionicsTheme.cyan
+                        val: aiService.isFL380FlightMode ? "FL380 VEC" : aiService.config.provider.shortBadge,
+                        color: (aiService.isFL380FlightMode || aiService.config.provider == .offlineDoctrine) ? AvionicsTheme.mint : AvionicsTheme.cyan
                     )
                 }
                 .buttonStyle(.plain)
@@ -210,6 +232,9 @@ struct HeaderHUDView: View {
     }
 
     private var statusText: String {
+        if aiService.isFL380FlightMode {
+            return currentLanguage == .arabic ? "وضع FL380 • متصل محلياً" : "FL380 FLIGHT MODE · 74 PARTS"
+        }
         switch aiService.connectionStatus {
         case .offline:
             return currentLanguage == .arabic ? "مدرّب ذكي • محلي" : "LOCAL ENGINE · ARMED"

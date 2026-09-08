@@ -367,6 +367,17 @@ struct CockpitMessageRowView: View {
                                 .background(Capsule().fill(AvionicsTheme.cyan.opacity(0.15)))
                                 .foregroundColor(AvionicsTheme.cyan)
                         }
+
+                        if let tag = message.telemetryTag {
+                            Spacer()
+                            Text(tag)
+                                .font(.system(size: 7.5, weight: .bold, design: .monospaced))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1.5)
+                                .background(Capsule().fill(AvionicsTheme.panel2))
+                                .foregroundColor(AvionicsTheme.mint)
+                                .overlay(Capsule().stroke(AvionicsTheme.mint.opacity(0.4), lineWidth: 0.8))
+                        }
                     }
 
                     // Message Text

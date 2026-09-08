@@ -87,6 +87,14 @@ enum Haptics {
         #endif
     }
 
+    #if canImport(UIKit) && !os(macOS)
+    static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
+    }
+    #else
+    static func impact(_ style: Any? = nil) {}
+    #endif
+
     static func selection() {
         #if canImport(UIKit) && !os(macOS)
         UISelectionFeedbackGenerator().selectionChanged()
