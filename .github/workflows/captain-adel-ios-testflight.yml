@@ -1,0 +1,104 @@
+# Root-level home of the workflow that used to live at
+# iflygaca/Captain-Adel-iOS's own .github/workflows/testflight.yml, moved
+# here when that repo's full history was merged into
+# apps/captain-adel-ios (see /apps/README.md). Every step now runs with
+# working-directory apps/captain-adel-ios. Behavior is otherwise unchanged.
+name: captain-adel-ios — CD TestFlight Deployment
+
+on:
+  push:
+    tags:
+      - 'captain-adel-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Build Number (leave blank to auto-increment from commit count)'
+        required: false
+        default: ''
+      changelog:
+        description: 'TestFlight What to Test / Release Notes'
+        required: false
+        default: 'Complete Offline GACAR Vector Search (FL380 Flight Mode) & Cockpit Avionics HUD'
+
+defaults:
+  run:
+    working-directory: apps/captain-adel-ios
+
+jobs:
+  deploy-testflight:
+    name: Build & Upload to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode Version
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Set up Ruby & Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: apps/captain-adel-ios
+
+      - name: Configure Apple Developer Certificate & Provisioning
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD || 'flightkeychain123' }}
+        run: |
+          if [ -n "${CERTIFICATE_BASE64:-}" ]; then
+            # Create temporary flight keychain
+            CERT_PATH=$RUNNER_TEMP/build_cert.p12
+            PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+            KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+            echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERT_PATH
+            echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+            security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+            security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+            security import $CERT_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+            security list-keychain -d user -s $KEYCHAIN_PATH
+
+            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+            cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+            echo "✓ Signing credentials imported into CI Keychain"
+          else
+            echo "ℹ️ No custom certificate provided; using automatic signing / API key"
+          fi
+
+      - name: Deploy to TestFlight via Fastlane
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+          APPLE_ID: ${{ secrets.APPLE_ID || 'i@flygaca.com' }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID || 'J2G24XVTQ3' }}
+        run: |
+          BUILD_NUM="${{ github.event.inputs.build_number }}"
+          CHANGELOG="${{ github.event.inputs.changelog }}"
+
+          if [ -z "$BUILD_NUM" ]; then
+            BUILD_NUM=$(git rev-list --count HEAD)
+          fi
+
+          bundle exec fastlane beta build_number:"$BUILD_NUM" changelog:"$CHANGELOG"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: CaptainAdel-TestFlight-IPA
+          path: apps/captain-adel-ios/build/*.ipa
+          if-no-files-found: ignore

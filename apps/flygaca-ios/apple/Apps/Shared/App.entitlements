@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.FlyGACA</string>
+	</array>
+	<!-- Sign in with Apple was removed 2026-08: the shipping apps are paid-up-front
+	     and fully offline, and the registered App IDs/profiles don't carry the
+	     capability. Re-add it here AND on all App IDs (regenerating the profiles)
+	     when the Firebase sign-in phase lands — see docs/RUNBOOK-ios-firebase.md §4. -->
+</dict>
+</plist>

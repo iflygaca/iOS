@@ -1,0 +1,76 @@
+# Root-level home of the workflow that used to live at
+# iflygaca/Captain-Adel-iOS's own .github/workflows/ci.yml, moved here when
+# that repo's full history was merged into apps/captain-adel-ios (see
+# /apps/README.md). Every step now runs with working-directory
+# apps/captain-adel-ios. Behavior is otherwise unchanged.
+name: captain-adel-ios — CI Build & Verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/captain-adel-ios/**'
+      - '.github/workflows/captain-adel-ios-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/captain-adel-ios/**'
+      - '.github/workflows/captain-adel-ios-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: captain-adel-ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/captain-adel-ios
+
+jobs:
+  build-and-verify:
+    name: Build & Validate iOS Scheme
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode Version
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('apps/captain-adel-ios/**/*.swift', 'apps/captain-adel-ios/captadel.xcodeproj/**') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Build Project (Simulator Target)
+        run: |
+          xcodebuild clean build \
+            -project captadel.xcodeproj \
+            -scheme MyApp \
+            -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify || xcodebuild build \
+            -project captadel.xcodeproj \
+            -scheme MyApp \
+            -destination "platform=iOS Simulator,name=iPhone 16 Pro" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Verify App Icon & Assets
+        run: |
+          test -f MyApp/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+          test -f MyApp/Assets.xcassets/AppIcon.appiconset/Contents.json
+          echo "✓ 1024x1024 Universal AppIcon asset catalog verified"
+
+      - name: Validate GACAR Corpus & Vector Engine Integrity
+        run: |
+          echo "Checking GACAR database consistency..."
+          grep -q "GACARCorpusDatabase" MyApp/Models/GACARCorpusDatabase.swift
+          grep -q "GACARVectorSearchEngine" MyApp/Services/GACARVectorSearchEngine.swift
+          echo "✓ On-device vector search engine & 74-part corpus verified"

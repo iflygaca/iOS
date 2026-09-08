@@ -1,0 +1,97 @@
+# ==============================================================================
+# Captain Adel iOS - Fastlane Configuration
+# ==============================================================================
+default_platform(:ios)
+
+platform :ios do
+  desc "Run CI build verification check"
+  lane :build_check do
+    xcodebuild(
+      project: "captadel.xcodeproj",
+      scheme: "MyApp",
+      destination: "platform=iOS Simulator,name=iPhone 17 Pro",
+      clean: true,
+      build: true
+    )
+  end
+
+  desc "Build and upload new beta build to Apple TestFlight"
+  lane :beta do |options|
+    # 1. Connect via App Store Connect API Key if valid credentials provided
+    api_key = nil
+    key_content = ENV["APP_STORE_CONNECT_KEY_CONTENT"].to_s.strip
+    key_id = ENV["APP_STORE_CONNECT_KEY_ID"].to_s.strip
+    issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"].to_s.strip
+
+    if !key_content.empty? && !key_id.empty? && !issuer_id.empty?
+      begin
+        api_key = app_store_connect_api_key(
+          key_id: key_id,
+          issuer_id: issuer_id,
+          key_content: key_content,
+          is_key_content_base64: true
+        )
+      rescue => e
+        UI.important("⚠️ App Store Connect API Key could not be loaded (#{e.message}). Proceeding with manual signing / local credentials.")
+      end
+    end
+
+    # 2. Increment Build Number (or use options[:build_number])
+    build_num = options[:build_number] || number_of_commits
+    increment_build_number(
+      build_number: build_num.to_s,
+      xcodeproj: "captadel.xcodeproj"
+    )
+
+    # 3. Build & Archive
+    build_app(
+      project: "captadel.xcodeproj",
+      scheme: "MyApp",
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: "./ExportOptions.plist",
+      clean: true,
+      output_directory: "./build",
+      output_name: "CaptainAdel.ipa"
+    )
+
+    # 4. Upload to TestFlight
+    changelog = options[:changelog] || "Captain Adel iOS Build #{build_num}: Complete Offline GACAR Vector Search (FL380 Flight Mode) & Avionics HUD."
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      changelog: changelog,
+      groups: ["Aviation Internal", "GACA Flight Testers"]
+    )
+  end
+
+  desc "Deploy to Apple App Store for Review"
+  lane :release do |options|
+    api_key = nil
+    key_content = ENV["APP_STORE_CONNECT_KEY_CONTENT"].to_s.strip
+    key_id = ENV["APP_STORE_CONNECT_KEY_ID"].to_s.strip
+    issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"].to_s.strip
+
+    if !key_content.empty? && !key_id.empty? && !issuer_id.empty?
+      begin
+        api_key = app_store_connect_api_key(
+          key_id: key_id,
+          issuer_id: issuer_id,
+          key_content: key_content,
+          is_key_content_base64: true
+        )
+      rescue => e
+        UI.important("⚠️ App Store Connect API Key could not be loaded (#{e.message}).")
+      end
+    end
+
+    deliver(
+      api_key: api_key,
+      force: false,
+      submit_for_review: false,
+      automatic_release: true,
+      ipa: "./build/CaptainAdel.ipa"
+    )
+  end
+end
+
