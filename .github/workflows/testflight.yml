@@ -74,7 +74,7 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
           APPLE_ID: ${{ secrets.APPLE_ID || 'i@flygaca.com' }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID || 'J2G24XVTQ3' }}
         run: |
           BUILD_NUM="${{ github.event.inputs.build_number }}"
           CHANGELOG="${{ github.event.inputs.changelog }}"
