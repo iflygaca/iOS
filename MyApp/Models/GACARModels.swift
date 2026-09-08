@@ -143,40 +143,49 @@ struct QuizQuestion: Identifiable {
 }
 
 // MARK: - METAR Aviation Weather Model
-struct METARReport: Identifiable {
+struct METARReport: Identifiable, Equatable {
     let id = UUID()
     let rawText: String
     let icaoCode: String
     let airportNameEn: String
     let airportNameAr: String
-    let flightCategory: FlightCategory
-    let windInfo: String
-    let visibility: String
-    let ceiling: String
-    let temperature: String
-    let dewPoint: String
-    let altimeter: String
-    let remarks: String
+    var flightCategory: FlightCategory
+    var windInfo: String
+    var visibility: String
+    var ceiling: String
+    var temperature: String
+    var dewPoint: String
+    var altimeter: String
+    var remarks: String
+    var isLive: Bool = false
+    var lastUpdated: Date? = nil
+    
+    static func == (lhs: METARReport, rhs: METARReport) -> Bool {
+        lhs.icaoCode == rhs.icaoCode && lhs.rawText == rhs.rawText
+    }
 }
 
-enum FlightCategory: String {
+enum FlightCategory: String, CaseIterable {
     case vfr = "VFR"
     case mvfr = "MVFR"
     case ifr = "IFR"
+    case lifr = "LIFR"
 
     var color: Color {
         switch self {
-        case .vfr: return .green
-        case .mvfr: return .blue
-        case .ifr: return .red
+        case .vfr: return AvionicsTheme.mint
+        case .mvfr: return AvionicsTheme.cyan
+        case .ifr: return AvionicsTheme.amber
+        case .lifr: return Color.purple
         }
     }
 
     var arabicDescription: String {
         switch self {
-        case .vfr: return "قواعد الطيران البصري (ممتاز)"
-        case .mvfr: return "قواعد طيران بصري هامشية"
-        case .ifr: return "قواعد الطيران الآلي (صعب)"
+        case .vfr: return "طيران بصري (VFR)"
+        case .mvfr: return "بصري هامشي (MVFR)"
+        case .ifr: return "طيران آلي (IFR)"
+        case .lifr: return "آلي منخفض (LIFR)"
         }
     }
 }

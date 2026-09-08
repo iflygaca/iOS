@@ -5,7 +5,12 @@ struct AviationToolsView: View {
     @State private var selectedToolTab: Int = 1 // 0: METAR Weather, 1: Exam Quiz & Flashcards, 2: Fuel & Crosswind
     
     // METAR weather state
-    @State private var selectedAirport: METARReport = METARService.saudiAirports[0]
+    @ObservedObject private var metarService = METARService.shared
+    @State private var selectedAirportCode: String = "OERK"
+
+    private var selectedAirport: METARReport {
+        metarService.airports.first(where: { $0.icaoCode == selectedAirportCode }) ?? metarService.airports[0]
+    }
     
     // Quiz & Flashcard state
     @State private var studyMode: StudyMode = .quiz
@@ -99,6 +104,9 @@ struct AviationToolsView: View {
                     }
                     .padding(14)
                 }
+                .refreshable {
+                    await metarService.fetchLiveSaudiMETARs()
+                }
                 .background(CockpitBackdrop())
             }
             .background(AvionicsTheme.bg)
@@ -137,30 +145,71 @@ struct AviationToolsView: View {
     // MARK: - 1. Cockpit METAR Weather Section
     private var cockpitMetarSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(currentLanguage == .arabic ? "اختر المطار لمشاهدة التقرير الجوي (METAR)" : "SELECT SAUDI AERODROME METAR")
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(AvionicsTheme.inkDim)
+            // Header with Live NOAA Status & Refresh
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(currentLanguage == .arabic ? "محطات أرصاد الطيران المدني السعودي" : "18 SAUDI CIVIL AERODROMES")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.ink)
+
+                    Text(currentLanguage == .arabic ? "بيانات حية من شبكة الأرصاد العالمية" : "Real-time observations from NOAA / GACA")
+                        .font(.system(size: 9))
+                        .foregroundColor(AvionicsTheme.inkDim)
+                }
+
+                Spacer()
+
+                // Live Badge
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(metarService.isOfflineMode ? AvionicsTheme.inkDim : AvionicsTheme.mint)
+                        .frame(width: 6, height: 6)
+                    Text(metarService.isOfflineMode ? (currentLanguage == .arabic ? "احتياطي محلي" : "OFFLINE BASELINE") : "LIVE NOAA 📡")
+                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(metarService.isOfflineMode ? AvionicsTheme.inkDim : AvionicsTheme.mint)
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(AvionicsTheme.panel2))
+                .overlay(Capsule().stroke(metarService.isOfflineMode ? AvionicsTheme.line : AvionicsTheme.mint.opacity(0.4), lineWidth: 1))
+
+                // Refresh Button
+                Button(action: {
+                    Haptics.light()
+                    Task {
+                        await metarService.fetchLiveSaudiMETARs()
+                    }
+                }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(AvionicsTheme.cyan)
+                        .padding(6)
+                        .background(Circle().fill(AvionicsTheme.panel2))
+                }
+                .buttonStyle(.pressable)
+            }
             
+            // Airport Selector Chips (All 18 Saudi Aerodromes)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(METARService.saudiAirports) { airport in
-                        let isSelected = selectedAirport.icaoCode == airport.icaoCode
+                    ForEach(metarService.airports) { airport in
+                        let isSelected = selectedAirportCode == airport.icaoCode
                         Button(action: {
                             Haptics.selection()
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                selectedAirport = airport
+                                selectedAirportCode = airport.icaoCode
                             }
                         }) {
                             VStack(spacing: 3) {
                                 Text(airport.icaoCode)
-                                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    .font(.system(size: 13.5, weight: .bold, design: .monospaced))
                                     .foregroundColor(isSelected ? AvionicsTheme.cyan : AvionicsTheme.ink)
                                 Text(airport.flightCategory.rawValue)
-                                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                                    .font(.system(size: 8.5, weight: .black, design: .monospaced))
                                     .foregroundColor(airport.flightCategory.color)
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, 11)
+                            .padding(.vertical, 7)
                             .background(Capsule().fill(isSelected ? AvionicsTheme.panel2 : AvionicsTheme.panel))
                             .overlay(
                                 Capsule().stroke(
@@ -181,9 +230,19 @@ struct AviationToolsView: View {
                     Image(systemName: "antenna.radiowaves.left.and.right")
                         .foregroundColor(AvionicsTheme.cyan)
                     Text(currentLanguage == .arabic ? selectedAirport.airportNameAr : selectedAirport.airportNameEn)
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 13.5, weight: .bold))
                         .foregroundColor(AvionicsTheme.ink)
                     Spacer()
+
+                    if selectedAirport.isLive {
+                        Text("LIVE")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(AvionicsTheme.mint.opacity(0.18)))
+                            .foregroundColor(AvionicsTheme.mint)
+                    }
+
                     Text(selectedAirport.flightCategory.rawValue)
                         .font(.system(size: 10, weight: .black, design: .monospaced))
                         .padding(.horizontal, 7)
@@ -206,6 +265,16 @@ struct AviationToolsView: View {
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .stroke(AvionicsTheme.mint.opacity(0.3), lineWidth: 1)
                     )
+
+                HStack {
+                    Text(selectedAirport.flightCategory.arabicDescription)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(selectedAirport.flightCategory.color)
+                    Spacer()
+                    Text(selectedAirport.remarks)
+                        .font(.system(size: 9.5))
+                        .foregroundColor(AvionicsTheme.inkDim)
+                }
             }
             .padding(12)
             .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 12, glow: false, tint: 0.6)
