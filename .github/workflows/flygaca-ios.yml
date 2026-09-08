@@ -27,10 +27,6 @@ concurrency:
 # cannot silently inherit a write-enabled GITHUB_TOKEN.
 permissions: {}
 
-defaults:
-  run:
-    working-directory: apps/flygaca-ios
-
 jobs:
   swift-test:
     name: Swift Package Tests
@@ -38,6 +34,9 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: apps/flygaca-ios
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -50,6 +49,9 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: apps/flygaca-ios
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -92,6 +94,9 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: apps/flygaca-ios
     strategy:
       matrix:
         app: [flygaca, elpt, aip]
@@ -122,6 +127,9 @@ jobs:
     timeout-minutes: 40
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: apps/flygaca-ios
     strategy:
       matrix:
         app: [flygaca, elpt, aip]
@@ -165,6 +173,9 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: apps/flygaca-ios
     strategy:
       fail-fast: false
       # Every shipping app signs here. A new app needs an Apple App ID, an App
