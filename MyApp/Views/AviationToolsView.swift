@@ -28,6 +28,8 @@ struct AviationToolsView: View {
     @State private var windDirection: String = "310"
     @State private var runwayHeading: String = "340"
 
+    @Namespace private var modeNamespace
+
     enum StudyMode: String, CaseIterable, Identifiable {
         case quiz = "Exam Quiz"
         case flashcard = "Flashcards"
@@ -57,11 +59,12 @@ struct AviationToolsView: View {
                     Spacer()
                     Image(systemName: "gauge.with.needle.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(AvionicsTheme.cyan)
+                        .foregroundStyle(AvionicsTheme.mintCyanGradient)
                 }
                 .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(AvionicsTheme.panel)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial)
+                .background(AvionicsTheme.panel.opacity(0.85))
                 .overlay(
                     Rectangle()
                         .frame(height: 1)
@@ -70,7 +73,7 @@ struct AviationToolsView: View {
                 )
 
                 // Tactical Mode Segmented Switcher
-                HStack(spacing: 0) {
+                HStack(spacing: 4) {
                     modeTabButton(title: currentLanguage == .arabic ? "طقس METAR" : "METAR", index: 0)
                     modeTabButton(title: currentLanguage == .arabic ? "اختبار وبطاقات" : "PREP & FLASH", index: 1)
                     modeTabButton(title: currentLanguage == .arabic ? "حاسبات FMC" : "FMC CALCS", index: 2)
@@ -96,7 +99,7 @@ struct AviationToolsView: View {
                     }
                     .padding(14)
                 }
-                .background(AvionicsTheme.bg)
+                .background(CockpitBackdrop())
             }
             .background(AvionicsTheme.bg)
         }
@@ -105,17 +108,30 @@ struct AviationToolsView: View {
     }
 
     private func modeTabButton(title: String, index: Int) -> some View {
-        Button(action: { selectedToolTab = index }) {
+        let isSelected = selectedToolTab == index
+        return Button(action: {
+            Haptics.selection()
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
+                selectedToolTab = index
+            }
+        }) {
             Text(title)
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(selectedToolTab == index ? AvionicsTheme.bg : AvionicsTheme.inkDim)
+                .foregroundColor(isSelected ? AvionicsTheme.bg : AvionicsTheme.inkDim)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
+                .padding(.vertical, 7)
                 .background(
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(selectedToolTab == index ? AvionicsTheme.cyan : Color.clear)
+                    ZStack {
+                        if isSelected {
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(AvionicsTheme.mintCyanGradient)
+                                .matchedGeometryEffect(id: "toolModeHighlight", in: modeNamespace)
+                                .shadow(color: AvionicsTheme.cyan.opacity(0.4), radius: 6, x: 0, y: 2)
+                        }
+                    }
                 )
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - 1. Cockpit METAR Weather Section
@@ -128,31 +144,33 @@ struct AviationToolsView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(METARService.saudiAirports) { airport in
+                        let isSelected = selectedAirport.icaoCode == airport.icaoCode
                         Button(action: {
-                            withAnimation {
+                            Haptics.selection()
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                                 selectedAirport = airport
                             }
                         }) {
                             VStack(spacing: 3) {
                                 Text(airport.icaoCode)
                                     .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                    .foregroundColor(selectedAirport.icaoCode == airport.icaoCode ? AvionicsTheme.cyan : AvionicsTheme.ink)
+                                    .foregroundColor(isSelected ? AvionicsTheme.cyan : AvionicsTheme.ink)
                                 Text(airport.flightCategory.rawValue)
                                     .font(.system(size: 9, weight: .black, design: .monospaced))
                                     .foregroundColor(airport.flightCategory.color)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(selectedAirport.icaoCode == airport.icaoCode ? AvionicsTheme.panel2 : AvionicsTheme.panel)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .stroke(selectedAirport.icaoCode == airport.icaoCode ? AvionicsTheme.cyan : AvionicsTheme.line, lineWidth: 1)
-                                    )
+                            .background(Capsule().fill(isSelected ? AvionicsTheme.panel2 : AvionicsTheme.panel))
+                            .overlay(
+                                Capsule().stroke(
+                                    isSelected ? AnyShapeStyle(AvionicsTheme.cyanTealGradient) : AnyShapeStyle(AvionicsTheme.line),
+                                    lineWidth: isSelected ? 1.4 : 1
+                                )
                             )
+                            .shadow(color: isSelected ? AvionicsTheme.cyan.opacity(0.3) : .clear, radius: 8, x: 0, y: 3)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.pressable)
                     }
                 }
             }
@@ -168,14 +186,11 @@ struct AviationToolsView: View {
                     Spacer()
                     Text(selectedAirport.flightCategory.rawValue)
                         .font(.system(size: 10, weight: .black, design: .monospaced))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(selectedAirport.flightCategory.color.opacity(0.2))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(selectedAirport.flightCategory.color.opacity(0.2)))
                         .foregroundColor(selectedAirport.flightCategory.color)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 3)
-                                .stroke(selectedAirport.flightCategory.color, lineWidth: 1)
-                        )
+                        .overlay(Capsule().stroke(selectedAirport.flightCategory.color, lineWidth: 1))
                 }
                 
                 Text(selectedAirport.rawText)
@@ -183,22 +198,18 @@ struct AviationToolsView: View {
                     .foregroundColor(AvionicsTheme.mint)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.black.opacity(0.9))
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(Color.black.opacity(0.92))
+                    )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(AvionicsTheme.line, lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(AvionicsTheme.mint.opacity(0.3), lineWidth: 1)
                     )
             }
             .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(AvionicsTheme.panel)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(AvionicsTheme.line, lineWidth: 1)
-                    )
-            )
-            
+            .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 12, glow: false, tint: 0.6)
+
             // Decoded Avionics Grid
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 decodedGridCard(
@@ -229,7 +240,7 @@ struct AviationToolsView: View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundColor(AvionicsTheme.cyan)
+                .foregroundStyle(AvionicsTheme.mintCyanGradient)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 8.5, weight: .bold, design: .monospaced))
@@ -241,14 +252,7 @@ struct AviationToolsView: View {
             Spacer()
         }
         .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(AvionicsTheme.panel2)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(AvionicsTheme.line, lineWidth: 1)
-                )
-        )
+        .glassPanel(accent: AvionicsTheme.teal, cornerRadius: 10, glow: false, tint: 0.65)
     }
 
     // MARK: - 2. Quiz & Flashcards Section
@@ -266,23 +270,29 @@ struct AviationToolsView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     Button(action: {
+                        Haptics.selection()
                         selectedQuizCategory = nil
                         resetQuiz()
                     }) {
                         Text(currentLanguage == .arabic ? "الكل" : "ALL TOPICS")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(selectedQuizCategory == nil ? AvionicsTheme.cyan : AvionicsTheme.panel2)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule().fill(
+                                    selectedQuizCategory == nil ? AnyShapeStyle(AvionicsTheme.mintCyanGradient) : AnyShapeStyle(AvionicsTheme.panel2)
+                                )
+                            )
                             .foregroundColor(selectedQuizCategory == nil ? AvionicsTheme.bg : AvionicsTheme.inkDim)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .stroke(selectedQuizCategory == nil ? AvionicsTheme.cyan : AvionicsTheme.line, lineWidth: 1)
+                                Capsule().stroke(selectedQuizCategory == nil ? Color.clear : AvionicsTheme.line, lineWidth: 1)
                             )
                     }
-                    
+                    .buttonStyle(.pressable)
+
                     ForEach(GACARCategory.allCases) { cat in
                         Button(action: {
+                            Haptics.selection()
                             selectedQuizCategory = cat
                             resetQuiz()
                         }) {
@@ -293,14 +303,18 @@ struct AviationToolsView: View {
                                     .font(.system(size: 9.5, weight: .bold, design: .monospaced))
                             }
                             .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(selectedQuizCategory == cat ? AvionicsTheme.cyan : AvionicsTheme.panel2)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule().fill(
+                                    selectedQuizCategory == cat ? AnyShapeStyle(AvionicsTheme.mintCyanGradient) : AnyShapeStyle(AvionicsTheme.panel2)
+                                )
+                            )
                             .foregroundColor(selectedQuizCategory == cat ? AvionicsTheme.bg : AvionicsTheme.inkDim)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .stroke(selectedQuizCategory == cat ? AvionicsTheme.cyan : AvionicsTheme.line, lineWidth: 1)
+                                Capsule().stroke(selectedQuizCategory == cat ? Color.clear : AvionicsTheme.line, lineWidth: 1)
                             )
                         }
+                        .buttonStyle(.pressable)
                     }
                 }
             }
@@ -346,18 +360,18 @@ struct AviationToolsView: View {
                 Text(question.gacarReference)
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                     .foregroundColor(AvionicsTheme.cyan)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(AvionicsTheme.cyan.opacity(0.12))
-                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(AvionicsTheme.cyan.opacity(0.3), lineWidth: 1))
-                
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(AvionicsTheme.cyan.opacity(0.12)))
+                    .overlay(Capsule().stroke(AvionicsTheme.cyan.opacity(0.3), lineWidth: 1))
+
                 Spacer()
-                
+
                 Text("Q \(currentQuestionIndex + 1)/\(questions.count)")
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                     .foregroundColor(AvionicsTheme.inkDim)
             }
-            
+
             // Question Statement Card
             Text(currentLanguage == .arabic ? question.questionAr : question.questionEn)
                 .font(.system(size: 14.5, weight: .bold))
@@ -365,15 +379,8 @@ struct AviationToolsView: View {
                 .lineSpacing(4)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(AvionicsTheme.panel)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(AvionicsTheme.line, lineWidth: 1)
-                        )
-                )
-            
+                .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 12, glow: false, tint: 0.6)
+
             // Options
             let options = currentLanguage == .arabic ? question.optionsAr : question.optionsEn
             ForEach(0..<options.count, id: \.self) { index in
@@ -383,6 +390,9 @@ struct AviationToolsView: View {
                     showAnswerFeedback = true
                     if index == question.correctOptionIndex {
                         userScore += 1
+                        Haptics.success()
+                    } else {
+                        Haptics.warning()
                     }
                 }) {
                     HStack {
@@ -390,7 +400,7 @@ struct AviationToolsView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(AvionicsTheme.ink)
                         Spacer()
-                        
+
                         if showAnswerFeedback {
                             if index == question.correctOptionIndex {
                                 Image(systemName: "checkmark.seal.fill")
@@ -403,17 +413,17 @@ struct AviationToolsView: View {
                     }
                     .padding(12)
                     .background(
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .fill(cockpitOptionBg(index: index, correct: question.correctOptionIndex))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(cockpitOptionBorder(index: index, correct: question.correctOptionIndex), lineWidth: 1)
-                            )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(cockpitOptionBorder(index: index, correct: question.correctOptionIndex), lineWidth: 1.2)
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
             }
-            
+
             // Explanation & Next Action
             if showAnswerFeedback {
                 VStack(alignment: .leading, spacing: 6) {
@@ -424,23 +434,17 @@ struct AviationToolsView: View {
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundColor(AvionicsTheme.cyan)
                     }
-                    
+
                     Text(currentLanguage == .arabic ? question.explanationAr : question.explanationEn)
                         .font(.system(size: 12))
                         .foregroundColor(AvionicsTheme.inkDim)
                         .lineSpacing(3)
                 }
                 .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(AvionicsTheme.panel2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(AvionicsTheme.line, lineWidth: 1)
-                        )
-                )
-                
+                .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 10, glow: false, tint: 0.65)
+
                 Button(action: {
+                    Haptics.light()
                     showAnswerFeedback = false
                     selectedAnswerIndex = nil
                     if currentQuestionIndex + 1 < questions.count {
@@ -459,9 +463,14 @@ struct AviationToolsView: View {
                         Spacer()
                     }
                     .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.cyan))
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(AvionicsTheme.mintCyanGradient)
+                    )
                     .foregroundColor(AvionicsTheme.bg)
+                    .shadow(color: AvionicsTheme.cyan.opacity(0.35), radius: 10, x: 0, y: 4)
                 }
+                .buttonStyle(.pressable)
             }
         }
     }
@@ -511,14 +520,7 @@ struct AviationToolsView: View {
                     }
                     .padding(18)
                     .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(AvionicsTheme.panel)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1)
-                            )
-                    )
+                    .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 14, tint: 0.55)
                 } else {
                     // Back of Card
                     VStack(alignment: .leading, spacing: 10) {
@@ -551,14 +553,7 @@ struct AviationToolsView: View {
                     }
                     .padding(18)
                     .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(AvionicsTheme.panel2)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(AvionicsTheme.mint.opacity(0.5), lineWidth: 1)
-                            )
-                    )
+                    .glassPanel(accent: AvionicsTheme.mint, cornerRadius: 14, tint: 0.6)
                 }
             }
             .rotation3DEffect(.degrees(isCardFlipped ? 180 : 0), axis: (x: 0.0, y: 1.0, z: 0.0))
@@ -571,6 +566,7 @@ struct AviationToolsView: View {
             // Navigation Controls
             HStack(spacing: 16) {
                 Button(action: {
+                    Haptics.light()
                     if currentQuestionIndex > 0 {
                         isCardFlipped = false
                         currentQuestionIndex -= 1
@@ -582,15 +578,18 @@ struct AviationToolsView: View {
                     }
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.panel2))
+                    .padding(.vertical, 9)
+                    .background(Capsule().fill(AvionicsTheme.panel2))
+                    .overlay(Capsule().stroke(AvionicsTheme.line, lineWidth: 1))
                     .foregroundColor(AvionicsTheme.inkDim)
                 }
+                .buttonStyle(.pressable)
                 .disabled(currentQuestionIndex == 0)
-                
+
                 Spacer()
-                
+
                 Button(action: {
+                    Haptics.light()
                     if currentQuestionIndex + 1 < questions.count {
                         isCardFlipped = false
                         currentQuestionIndex += 1
@@ -602,10 +601,12 @@ struct AviationToolsView: View {
                     }
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.cyan))
+                    .padding(.vertical, 9)
+                    .background(Capsule().fill(AvionicsTheme.mintCyanGradient))
                     .foregroundColor(AvionicsTheme.bg)
+                    .shadow(color: AvionicsTheme.cyan.opacity(0.35), radius: 8, x: 0, y: 3)
                 }
+                .buttonStyle(.pressable)
                 .disabled(currentQuestionIndex + 1 >= questions.count)
             }
         }
@@ -636,28 +637,26 @@ struct AviationToolsView: View {
                 .font(.system(size: 40, weight: .black, design: .monospaced))
                 .foregroundColor(isPassed ? AvionicsTheme.mint : AvionicsTheme.red)
             
-            Button(action: resetQuiz) {
+            Button(action: {
+                Haptics.light()
+                resetQuiz()
+            }) {
                 HStack {
                     Image(systemName: "arrow.counterclockwise")
                     Text(currentLanguage == .arabic ? "إعادة الاختبار" : "RESET EXAM")
                 }
                 .font(.system(size: 12, weight: .bold, design: .monospaced))
                 .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 6).fill(AvionicsTheme.cyan))
+                .padding(.vertical, 11)
+                .background(Capsule().fill(AvionicsTheme.mintCyanGradient))
                 .foregroundColor(AvionicsTheme.bg)
+                .shadow(color: AvionicsTheme.cyan.opacity(0.4), radius: 10, x: 0, y: 4)
             }
+            .buttonStyle(.pressable)
         }
         .padding(20)
         .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(AvionicsTheme.panel)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(AvionicsTheme.line, lineWidth: 1)
-                )
-        )
+        .glassPanel(accent: isPassed ? AvionicsTheme.mint : AvionicsTheme.red, cornerRadius: 14)
     }
 
     private func cockpitOptionBg(index: Int, correct: Int) -> Color {
@@ -748,16 +747,9 @@ struct AviationToolsView: View {
                     }
                 }
                 .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(AvionicsTheme.panel2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(AvionicsTheme.line, lineWidth: 1)
-                        )
-                )
+                .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 12, glow: false, tint: 0.6)
             }
-            
+
             // 2. Crosswind Component Calculator
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -832,14 +824,7 @@ struct AviationToolsView: View {
                     }
                 }
                 .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(AvionicsTheme.panel2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(AvionicsTheme.line, lineWidth: 1)
-                        )
-                )
+                .glassPanel(accent: AvionicsTheme.teal, cornerRadius: 12, glow: false, tint: 0.6)
             }
         }
     }
