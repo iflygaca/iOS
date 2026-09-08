@@ -1,9 +1,14 @@
-name: Captain Adel CD - TestFlight Deployment
+# Root-level home of the workflow that used to live at
+# iflygaca/Captain-Adel-iOS's own .github/workflows/testflight.yml, moved
+# here when that repo's full history was merged into
+# apps/captain-adel-ios (see /apps/README.md). Every step now runs with
+# working-directory apps/captain-adel-ios. Behavior is otherwise unchanged.
+name: captain-adel-ios — CD TestFlight Deployment
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'captain-adel-v*.*.*'
   workflow_dispatch:
     inputs:
       build_number:
@@ -14,6 +19,10 @@ on:
         description: 'TestFlight What to Test / Release Notes'
         required: false
         default: 'Complete Offline GACAR Vector Search (FL380 Flight Mode) & Cockpit Avionics HUD'
+
+defaults:
+  run:
+    working-directory: apps/captain-adel-ios
 
 jobs:
   deploy-testflight:
@@ -37,6 +46,7 @@ jobs:
         with:
           ruby-version: '3.3'
           bundler-cache: true
+          working-directory: apps/captain-adel-ios
 
       - name: Configure Apple Developer Certificate & Provisioning
         env:
@@ -50,17 +60,17 @@ jobs:
             CERT_PATH=$RUNNER_TEMP/build_cert.p12
             PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
             KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-            
+
             echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERT_PATH
             echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-            
+
             security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
             security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
             security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-            
+
             security import $CERT_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
             security list-keychain -d user -s $KEYCHAIN_PATH
-            
+
             mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
             cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
             echo "✓ Signing credentials imported into CI Keychain"
@@ -78,11 +88,11 @@ jobs:
         run: |
           BUILD_NUM="${{ github.event.inputs.build_number }}"
           CHANGELOG="${{ github.event.inputs.changelog }}"
-          
+
           if [ -z "$BUILD_NUM" ]; then
             BUILD_NUM=$(git rev-list --count HEAD)
           fi
-          
+
           bundle exec fastlane beta build_number:"$BUILD_NUM" changelog:"$CHANGELOG"
 
       - name: Upload IPA Artifact
@@ -90,6 +100,5 @@ jobs:
         if: always()
         with:
           name: CaptainAdel-TestFlight-IPA
-          path: build/*.ipa
+          path: apps/captain-adel-ios/build/*.ipa
           if-no-files-found: ignore
-

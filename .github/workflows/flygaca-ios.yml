@@ -1,30 +1,35 @@
-# Ported from FlyGACA-app's .github/workflows/ios.yml, adapted for this repo:
-# no content-validation job (the content bundler lives in the monorepo — this
-# repo builds from committed Content/ snapshots, refreshed via
-# scripts/sync-content.sh) and no `npm ci` (thin package.json, no dependencies).
-name: iOS Builds & Tests
+# Root-level home of the workflow that used to live at
+# iflygaca/FlyGACA-ios's own .github/workflows/ios.yml, moved here when that
+# repo's full history was merged into apps/flygaca-ios (see /apps/README.md).
+# Every step now runs with working-directory apps/flygaca-ios; artifact paths
+# are prefixed the same way. Behavior is otherwise unchanged.
+name: flygaca-ios — iOS Builds & Tests
 
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+    paths:
+      - 'apps/flygaca-ios/**'
+      - '.github/workflows/flygaca-ios.yml'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
+    paths:
+      - 'apps/flygaca-ios/**'
+      - '.github/workflows/flygaca-ios.yml'
   workflow_dispatch:
 
 concurrency:
-  group: ios-${{ github.ref }}
+  group: flygaca-ios-${{ github.ref }}
   cancel-in-progress: true
 
 # Least-privilege floor. Every job below declares its own `permissions:`, which
 # overrides this; the empty default only ensures a future job added without one
 # cannot silently inherit a write-enabled GITHUB_TOKEN.
 permissions: {}
+
+defaults:
+  run:
+    working-directory: apps/flygaca-ios
 
 jobs:
   swift-test:
@@ -77,7 +82,7 @@ jobs:
             echo "Signing secrets present — TestFlight job will run on main pushes."
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Signing secrets absent — TestFlight job will be skipped (see docs/RUNBOOK-ios-signing.md)."
+            echo "Signing secrets absent — TestFlight job will be skipped (see apps/flygaca-ios/docs/RUNBOOK-ios-signing.md)."
           fi
 
   ios-build:
@@ -105,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ios-build-${{ matrix.app }}-debug
-          path: apple/.build/Build/Products/
+          path: apps/flygaca-ios/apple/.build/Build/Products/
           retention-days: 7
           if-no-files-found: ignore
 
@@ -138,8 +143,8 @@ jobs:
         with:
           name: ios-build-${{ matrix.app }}-release-${{ github.sha }}
           path: |
-            apple/.build/*.xcarchive
-            apple/.build/dSYMs
+            apps/flygaca-ios/apple/.build/*.xcarchive
+            apps/flygaca-ios/apple/.build/dSYMs
           retention-days: 14
           if-no-files-found: ignore
 
@@ -148,7 +153,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ios-dsyms-${{ matrix.app }}-${{ github.sha }}
-          path: apple/.build/dSYMs/
+          path: apps/flygaca-ios/apple/.build/dSYMs/
           retention-days: 30
           if-no-files-found: ignore
 
@@ -164,7 +169,7 @@ jobs:
       fail-fast: false
       # Every shipping app signs here. A new app needs an Apple App ID, an App
       # Store provisioning profile, and a PROVISIONING_PROFILE_<APP>_BASE64
-      # secret before it can join — see docs/RUNBOOK-ios-signing.md.
+      # secret before it can join — see apps/flygaca-ios/docs/RUNBOOK-ios-signing.md.
       matrix:
         include:
           - app: flygaca
@@ -253,7 +258,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ios-ipa-${{ matrix.app }}-${{ github.sha }}
-          path: apple/.build/export/${{ matrix.scheme }}/*.ipa
+          path: apps/flygaca-ios/apple/.build/export/${{ matrix.scheme }}/*.ipa
           retention-days: 30
           if-no-files-found: ignore
 
@@ -262,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ios-dsyms-signed-${{ matrix.app }}-${{ github.sha }}
-          path: apple/.build/dSYMs/
+          path: apps/flygaca-ios/apple/.build/dSYMs/
           retention-days: 30
           if-no-files-found: ignore
 
@@ -298,7 +303,7 @@ jobs:
 
       - name: Report results
         run: |
-          echo "## iOS CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## flygaca-ios CI/CD Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Swift Tests: ${{ needs.swift-test.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- project.yml Validation: ${{ needs.xcodegen-validate.result }}" >> $GITHUB_STEP_SUMMARY

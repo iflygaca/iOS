@@ -1,15 +1,30 @@
-name: Captain Adel CI - Build & Verification
+# Root-level home of the workflow that used to live at
+# iflygaca/Captain-Adel-iOS's own .github/workflows/ci.yml, moved here when
+# that repo's full history was merged into apps/captain-adel-ios (see
+# /apps/README.md). Every step now runs with working-directory
+# apps/captain-adel-ios. Behavior is otherwise unchanged.
+name: captain-adel-ios — CI Build & Verification
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - 'apps/captain-adel-ios/**'
+      - '.github/workflows/captain-adel-ios-ci.yml'
   pull_request:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - 'apps/captain-adel-ios/**'
+      - '.github/workflows/captain-adel-ios-ci.yml'
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: captain-adel-ios-ci-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/captain-adel-ios
 
 jobs:
   build-and-verify:
@@ -30,7 +45,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.swift', 'captadel.xcodeproj/**') }}
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('apps/captain-adel-ios/**/*.swift', 'apps/captain-adel-ios/captadel.xcodeproj/**') }}
           restore-keys: |
             ${{ runner.os }}-deriveddata-
 
@@ -59,4 +74,3 @@ jobs:
           grep -q "GACARCorpusDatabase" MyApp/Models/GACARCorpusDatabase.swift
           grep -q "GACARVectorSearchEngine" MyApp/Services/GACARVectorSearchEngine.swift
           echo "✓ On-device vector search engine & 74-part corpus verified"
-
