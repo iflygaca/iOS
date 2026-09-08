@@ -1,0 +1,6 @@
+# Captain Adel iOS - Fastlane Appfile
+app_identifier("com.flygaca.captainadel")
+apple_id(ENV["APPLE_ID"] || "i@flygaca.com")
+team_id(ENV["APPLE_TEAM_ID"] || "J2G24XVTQ3")
+itc_team_id(ENV["ITC_TEAM_ID"] || "J2G24XVTQ3")
+
