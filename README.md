@@ -1,230 +1,153 @@
-# Captain Adel iOS
+# Captain Adel iOS (كابتن عادل)
 
-An intelligent flight instructor at your fingertips. **Captain Adel** is the iOS companion to [Fly GACA](https://flygaca.com), an independent educational reference for civil aviation in the Kingdom of Saudi Arabia.
+[![CI - Build & Verification](https://github.com/iflygaca/Captain-Adel-iOS/actions/workflows/ci.yml/badge.svg)](https://github.com/iflygaca/Captain-Adel-iOS/actions/workflows/ci.yml)
+[![CD - TestFlight Deployment](https://github.com/iflygaca/Captain-Adel-iOS/actions/workflows/testflight.yml/badge.svg)](https://github.com/iflygaca/Captain-Adel-iOS/actions/workflows/testflight.yml)
+[![Release](https://img.shields.io/github/v/release/iflygaca/Captain-Adel-iOS?color=22d3ee&label=TestFlight)](https://github.com/iflygaca/Captain-Adel-iOS/releases/tag/v1.0.0)
+[![iOS 17+](https://img.shields.io/badge/iOS-17.0%2B-050810.svg?logo=apple&logoColor=white)](https://apple.com)
+[![Doctrine](https://img.shields.io/badge/Doctrine-Cite%20or%20Refuse-34d399.svg)](https://captadel.com)
+[![FL380 Mode](https://img.shields.io/badge/FL380%20Mode-100%25%20Offline%20RAG-22d3ee.svg)](https://captadel.com)
 
-Anytime, anywhere — study Saudi civil aviation regulations, prepare for your pilot exams, and learn from an AI instructor that cites the exact GACAR section every time.
+An intelligent cockpit flight instructor and regulatory co-pilot for your iPhone and iPad. **Captain Adel (كابتن عادل)** is the native iOS application accompanying [captadel.com](https://captadel.com) and [Fly GACA](https://flygaca.com) — an independent educational and operational aeronautical reference for civil aviation in the Kingdom of Saudi Arabia.
 
----
-
-## About Captain Adel
-
-Captain Adel is an AI flight instructor built on the complete Saudi civil aviation library — all 74 GACAR Parts, 21 topical handbooks, and every aerodrome and VFR chart. Every answer includes the exact regulatory section it came from.
-
-- **Bilingual** — English and Arabic, optimized for how Saudi aviation actually reads and studies.
-- **Right-to-left aware** — Full RTL support for Arabic text and interface.
-- **Offline-ready** — Progressive Web App architecture; study offline with content you load.
-- **Authoritative** — Answers always cite the GACAR section they come from.
-
-### What It's Not
-
-This app is **not** the General Authority of Civil Aviation, and it's not an official source. It's an independent project — not affiliated with, endorsed by, or connected to GACA. It does not replace the official GACAR, the AIP-KSA, your aircraft's AFM or POH, or your operator's manuals. Always verify against the official publication before relying on anything.
+Study Saudi civil aviation regulations, prepare for GACA theoretical examinations, verify FMC fuel/crosswind calculations, listen to live NOAA aviation weather for 18 Saudi airports, and converse hands-free with an AI co-pilot that strictly cites exact GACAR regulatory articles.
 
 ---
 
-## Features
+##  cockpit Highlights & Features
 
-### 🤖 Captain Adel AI Chat
+### 🛩️ FL380 Flight Mode (100% Offline GACAR Vector Search)
+- **Zero Network Required**: Operates in pressurized cockpits at Flight Level 380 with complete disconnection from the internet.
+- **Complete 74 GACAR Parts**: Comprehensive on-device corpus spanning all 6 regulatory divisions (Part 1 Definitions, Part 61 Pilot Certifications, Part 91 Operating Rules, Part 121 Commercial Operators, Part 145 Repair Stations, Aerodromes, SMS, etc.).
+- **On-Device Vector Space Engine**: Fast TF-IDF tokenization and Cosine Similarity retrieval (<3ms latency) with bilingual Arabic/English text normalization (tashkeel, hamza, and aviation token handling).
+- **Strict Cite-or-Refuse Doctrine**: Strict 0.28 cosine similarity thresholding. If a query lacks definitive statutory grounding in the GACAR regulations, Captain Adel explicitly refuses rather than hallucinating citations.
+- **HUD Telemetry Tagging**: Every answer displays active retrieval telemetry (e.g. `FL380 RAG · §91.155 · 94% MATCH · 2ms`).
 
-Ask any question about Saudi civil aviation regulations. The AI responds with the exact GACAR section and practical guidance.
+### 🎙️ Hands-Free Cockpit Voice Comms Engine
+- **Bilingual Speech Recognition (`SFSpeechRecognizer`)**: Real-time microphone capture in Saudi Arabic (`ar-SA`) or English (`en-US`).
+- **Hands-Free Transmission**: Automatic 1.4-second silence detection sends pilot queries hands-free.
+- **Synthesized Voice Radio (`AVSpeechSynthesizer`)**: Speaks Captain Adel's regulatory answers over simulated VHF cockpit radio (`COM 1 · 121.500 MHz`).
+- **Instant Interruption**: Tap the Push-To-Talk (PTT) neon button to immediately cut transmission and speak.
+- **Reactive Waveform**: 16 dynamic neon cyan/mint audio bars responding directly to microphone energy levels.
 
-- Conversational Q&A on any GACAR topic
-- Inline citations to regulatory sections
-- Follow-up questions and clarifications
-- Supports both English and Arabic
+### 📡 Live Saudi METAR/TAF Aviation Weather Engine
+- **Real-Time NOAA Aviation Feed**: Direct feed from `aviationweather.gov` for 18 civil aerodromes:
+  - **Major Hubs**: Riyadh (`OERK`), Jeddah (`OEJN`), Dammam (`OEDF`), Madinah (`OEMA`)
+  - **Regional & Desert Fields**: Abha (`OEAB`), Al Ula (`OEAO`), Tabuk (`OETB`), Taif (`OETR`), Qassim (`OEGS`), Yanbu (`OEYN`), Jazan (`OEGN`), Al-Ahsa (`OEAH`), Al Baha (`OEBA`), Hail (`OEHL`), Najran (`OENG`), Wadi Al-Dawasir (`OEWD`), Sharurah (`OESH`), Rafha (`OERF`)
+- **Automated Flight Categories**: Color-coded badges for **VFR** (Mint), **MVFR** (Cyan), **IFR** (Amber), and **LIFR** (Purple).
+- **Terminal Display & Grid**: High-contrast cockpit terminal card with decoded wind vectors, crosswinds, flight visibility, temperature/dewpoint, and QNH altimeter settings.
+- **Pull-To-Refresh**: Native `.refreshable` support with offline cached fallback.
 
-### 📚 GACAR Regulations Library
-
-Browse the complete Saudi civil aviation regulations.
-
-- All 74 GACAR Parts
-- 21 topical handbooks
-- Full-text search across all regulatory documents
-- Easy navigation by topic and section
-- Bookmarks for frequent references
-
-### ✈️ Aviation Tools & Exam Prep
-
-Everything a student pilot or instructor needs to prepare.
-
-- **E6B Calculator** — Wind corrections, fuel calculations, time/speed/distance problems
-- **Weight & Balance** — CG calculations and loading envelope checks
-- **VFR Minima Reference** — Quick lookup for visibility and cloud clearance requirements
-- **Airspace Quick Reference** — Airspace types and altitude constraints
-- **NOTAM Decoder** — Interpret NOTAMs quickly
-- **Practice Quiz** — Exam-style questions to test your knowledge
-- **METAR Decoder** — Understand aviation weather at a glance
-
-### ℹ️ About & Model Info
-
-Learn about the app, how it works, and the AI model powering Captain Adel.
+### 🎨 Avionics Cockpit UI (`captadel.com` Parity)
+- Deep midnight avionics palette (`#050810`, `#0c1220`, `#22d3ee`, `#34d399`, `#fbbf24`).
+- Rotating live status glow ring, callsign badge (`ADEL-1`), glassmorphic panels, and tactile spring haptic feedback.
+- Full bilingual English and Arabic layout with native Right-to-Left (RTL) typography.
 
 ---
 
-## Screenshots & UI Highlights
-
-**Language Support**  
-Full bilingual interface (English/Arabic) with automatic RTL layout for Arabic mode.
-
-**Interactive Components**  
-- Audio waveform visualizer for AI speech output
-- HUD-style header displays
-- Citation cards linking directly to regulatory sections
-- Real-time chat interface with streaming responses
-
----
-
-## Technical Details
-
-### Architecture
-
-Built with **SwiftUI** for iOS 15+, following the MVVM pattern:
-
-- **Views** — UI components and screen layouts
-- **Models** — Data structures for GACAR regulations
-- **Services** — AI chat, quiz, METAR fetching
-- **Components** — Reusable UI elements (audio waveforms, citation cards, HUD displays)
-
-### Key Technologies
-
-- **Language** — Swift (SwiftUI framework)
-- **Minimum iOS** — iOS 15.0
-- **Backend Integration** — REST API calls to Fly GACA services
-- **Data** — Cached regulatory library with full-text indexing
-
-### Project Structure
+## 🛠️ Architecture & Tech Stack
 
 ```
 MyApp/
+├── MyApp.swift                           # SwiftUI App entry point
+├── ContentView.swift                     # Cockpit tab navigation & floating capsule bar
+├── AvionicsTheme.swift                   # Glassmorphism, colors, fonts, haptics & styling
 ├── Models/
-│   └── GACARModels.swift          # Data models for regulations
-├── Views/
-│   ├── ChatView.swift              # Captain Adel AI chat interface
-│   ├── GACARLibraryView.swift       # Regulation browser
-│   ├── AviationToolsView.swift      # Tools and quiz
-│   ├── AboutView.swift              # App information
-│   └── Components/
-│       ├── AudioWaveformView.swift  # Waveform visualizer
-│       ├── HeaderHUDView.swift      # HUD-style header
-│       ├── CitationCardView.swift   # Regulation citation display
-│       └── [Other components]
+│   ├── GACARModels.swift                 # Chat, citations, METAR & quiz data structures
+│   ├── GACARCorpusDatabase.swift         # On-device 74 GACAR regulatory parts & sections
+│   └── AIProviderConfig.swift            # Provider configuration & credentials
 ├── Services/
-│   ├── CaptainAdelAIService.swift  # AI chat backend
-│   ├── QuizService.swift            # Practice questions
-│   └── METARService.swift           # Aviation weather
-├── MyApp.swift                      # App entry point
-└── ContentView.swift                # Main tab navigation
+│   ├── CaptainAdelAIService.swift        # Hybrid cloud/offline AI co-pilot coordinator
+│   ├── GACARVectorSearchEngine.swift     # On-device TF-IDF & Cosine Similarity vector engine
+│   ├── CockpitVoiceCommsService.swift    # SFSpeechRecognizer & AVSpeechSynthesizer engine
+│   ├── METARService.swift                # Live NOAA aviation weather fetcher & decoder
+│   ├── QuizService.swift                 # GACAR exam prep questions & flashcards
+│   └── KeychainHelper.swift              # Secure local token & key storage
+└── Views/
+    ├── ChatView.swift                    # Cockpit AI chat & Voice Assistant modal
+    ├── GACARLibraryView.swift            # 74-Part regulatory browser & search
+    ├── AviationToolsView.swift           # METAR weather, exam prep & FMC calculators
+    ├── AboutView.swift                   # System telemetry, model info & credentials
+    └── Components/
+        ├── HeaderHUDView.swift           # Avionics HUD bar & FL380 quick toggle
+        ├── AudioWaveformView.swift       # 16-bar reactive audio visualizer
+        ├── CitationCardView.swift        # Interactive GACAR statutory citation card
+        └── AISettingsSheet.swift         # AI engine, FL380 mode & telemetry settings
 ```
+
+- **Framework**: SwiftUI (iOS 17.0+)
+- **Speech**: Apple `Speech` & `AVFoundation`
+- **Networking**: `URLSession` with background retry and offline cache
+- **Build System**: Xcode 16+ / Xcode Beta (`captadel.xcodeproj`)
+- **Bundle ID**: `com.flygaca.captainadel`
 
 ---
 
-## Getting Started
+## 🚀 Quick Start & Development
 
 ### Requirements
+- **macOS** Sonoma or Sequoia (macOS 14+)
+- **Xcode** 16.0 or Xcode-beta
+- **iOS Simulator** or physical device running **iOS 17.0+**
 
-- **Xcode** 14.0 or later
-- **iOS** 15.0 or higher
-- **Swift** 5.7+
+### Local Build & Run
 
-### Installation
-
-1. **Clone the repository**
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/iflygaca/captain-adel-ios.git
-   cd captain-adel-ios
+   git clone https://github.com/iflygaca/Captain-Adel-iOS.git
+   cd Captain-Adel-iOS
    ```
 
-2. **Open in Xcode**
+2. **Open the Xcode Project:**
    ```bash
-   open "Untitled Project.xcodeproj"
+   open captadel.xcodeproj
    ```
 
-3. **Build and run**
-   - Select your target device or simulator
-   - Press `Cmd + R` to build and run
-
-### Configuration
-
-No additional API keys or credentials are needed to run the app locally. The app connects to Fly GACA backend services; adjust the base URL in `CaptainAdelAIService.swift` if running a custom backend.
+3. **Build via Command Line:**
+   ```bash
+   xcodebuild -project captadel.xcodeproj \
+              -scheme MyApp \
+              -destination "platform=iOS Simulator,name=iPhone 17 Pro" \
+              build
+   ```
 
 ---
 
-## Development
+## 📦 App Store & TestFlight Deployment
 
-### Code Structure
+Captain Adel iOS includes automated CI/CD pipelines and local archiving scripts:
 
-- **MVVM Pattern** — ViewModel services handle data, Views handle UI
-- **State Management** — SwiftUI `@State` and `@StateObject` for reactive updates
-- **Localization** — `AppLanguage` enum for English/Arabic switching
-
-### Adding Features
-
-To add a new feature:
-1. Create a new service file in `Services/` if fetching data
-2. Create a view file in `Views/` following the existing pattern
-3. Add a new tab in `ContentView.swift`
-4. Update localization strings for both languages
-
-### Testing
-
-Run tests from Xcode or the command line:
+### Option 1: Standalone Local Archiving (1-Command)
 ```bash
-xcodebuild test -scheme "MyApp" -destination "generic/platform=iOS Simulator"
+./scripts/archive_testflight.sh
+```
+Builds `build/MyApp.xcarchive`, exports a signed `.ipa` using `ExportOptions.plist`, and prepares it for Xcode Organizer or upload.
+
+### Option 2: Fastlane Beta Delivery
+```bash
+bundle install
+bundle exec fastlane beta
 ```
 
----
+### Option 3: GitHub Actions Continuous Deployment
+Pushing any version tag (e.g. `v1.0.0`) or triggering the manual dispatch workflow in GitHub Actions executes [`.github/workflows/testflight.yml`](.github/workflows/testflight.yml), compiling and shipping the build to TestFlight automatically.
 
-## Contributing
-
-We welcome contributions to Captain Adel. Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes with clear messages
-4. Push to your fork and open a pull request
-
-**Reporting Issues**  
-If you find a bug or have a feature suggestion, please open an issue on GitHub. For accuracy corrections or regulatory updates, contact us at **i@flygaca.com**.
+For complete developer account setup, refer to [**`TESTFLIGHT_READINESS.md`**](TESTFLIGHT_READINESS.md).
 
 ---
 
-## License
+## ⚖️ Regulatory Disclaimer
 
-Captain Adel iOS is open source. See the LICENSE file for details.
+**Captain Adel is an independent educational and pilot reference tool developed by Fly GACA.**
 
----
-
-## About Fly GACA
-
-**Fly GACA** is an independent educational reference for civil aviation in the Kingdom of Saudi Arabia. It brings the rules of Saudi civil aviation into one fast, modern place — and helps you actually learn them.
-
-### The Fly GACA Platform
-
-- **Library** — 74 GACAR Parts, 21 handbooks, aerodromes, VFR charts
-- **Captain Adel** — AI flight instructor answering GACAR questions
-- **Flight Tools** — E6B, weight & balance, VFR minima, NOTAM decoder, and more
-- **Guides** — Licensing, medical, conversion, English proficiency test
-- **Ground School** — Complete theoretical-knowledge syllabus and mock exams
-
-**Learn more:** [flygaca.com](https://flygaca.com)
+- It is **not** an official publication of the General Authority of Civil Aviation (GACA) of the Kingdom of Saudi Arabia.
+- It does **not** replace the official GACAR publications, the AIP-KSA, your aircraft's Airplane Flight Manual (AFM/POH), or your air carrier's approved operations manuals.
+- For operational pre-flight planning and in-flight legal compliance, always cross-verify with official GACA sources at [gaca.gov.sa](https://gaca.gov.sa).
 
 ---
 
-## Disclaimer
+## 📬 Contact & Inquiries
 
-**This app is not affiliated with the General Authority of Civil Aviation (GACA).** It does not replace the official GACAR, AIP-KSA, your aircraft's AFM/POH, or your operator's manuals. Always verify the current, official version at **gaca.gov.sa** before relying on any regulation.
-
-For operational use in flight, always reference the authoritative, current sources published by GACA.
-
----
-
-## Contact & Feedback
-
-Have questions, corrections, or feedback? We'd love to hear from you.
-
-- **Email** — [i@flygaca.com](mailto:i@flygaca.com)
-- **Website** — [flygaca.com](https://flygaca.com)
-- **GitHub** — [iflygaca/captain-adel-ios](https://github.com/iflygaca/captain-adel-ios)
-
----
-
-**Captain Adel:** One captain on every answer.
+- **Lead Aviator**: Captain Adel (كابتن عادل)
+- **Website**: [captadel.com](https://captadel.com) & [flygaca.com](https://flygaca.com)
+- **Email**: [i@flygaca.com](mailto:i@flygaca.com)
+- **Repository**: [github.com/iflygaca/Captain-Adel-iOS](https://github.com/iflygaca/Captain-Adel-iOS)
