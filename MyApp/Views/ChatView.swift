@@ -466,27 +466,47 @@ struct CockpitVoiceAssistantModalView: View {
     @ObservedObject var aiService: CaptainAdelAIService
     let language: AppLanguage
     @Environment(\.dismiss) private var dismiss
-    @State private var isListening: Bool = true
+    @StateObject private var voiceComms = CockpitVoiceCommsService.shared
+    @State private var assistantSpokenReply: String = ""
 
     var body: some View {
         ZStack {
             CockpitBackdrop()
 
-            VStack(spacing: 24) {
+            VStack(spacing: 20) {
+                // Top HUD Bar: Frequency & Close
                 HStack {
                     HStack(spacing: 6) {
-                        Text("COM 1 · FREQ 121.500")
+                        Circle()
+                            .fill(statusColor)
+                            .frame(width: 7, height: 7)
+                        Text("COM 1 · 121.500 MHz")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundColor(AvionicsTheme.cyan)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
+                            .foregroundColor(statusColor)
                     }
-                    .background(Capsule().fill(AvionicsTheme.cyan.opacity(0.12)))
-                    .overlay(Capsule().stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(statusColor.opacity(0.12)))
+                    .overlay(Capsule().stroke(statusColor.opacity(0.35), lineWidth: 1))
+
                     Spacer()
-                    Button(action: { dismiss() }) {
+
+                    // Status Pill
+                    Text(statusTitle)
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(AvionicsTheme.panel2))
+                        .foregroundColor(statusColor)
+                        .overlay(Capsule().stroke(statusColor.opacity(0.3), lineWidth: 1))
+
+                    Button(action: {
+                        voiceComms.stopListening()
+                        voiceComms.stopSpeaking()
+                        dismiss()
+                    }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 13, weight: .bold))
                             .foregroundColor(AvionicsTheme.inkDim)
                             .padding(8)
                             .background(Circle().fill(AvionicsTheme.panel2))
@@ -496,59 +516,240 @@ struct CockpitVoiceAssistantModalView: View {
                 .padding(.top, 16)
                 .padding(.horizontal, 20)
 
-                VStack(spacing: 6) {
-                    Text(language == .arabic ? "كابتن عادل على موجة الاتصال..." : "CAPT. ADEL // COMMS OPEN")
-                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                // Callsign & Subtitle
+                VStack(spacing: 4) {
+                    Text(language == .arabic ? "كابتن عادل // موجة الاتصال" : "CAPT. ADEL // RADIO COMMS")
+                        .font(.system(size: 17, weight: .black, design: .monospaced))
                         .foregroundStyle(AvionicsTheme.mintCyanGradient)
 
-                    Text(language == .arabic ? "تحدث باللغة العربية أو الإنجليزية لسؤال عن لوائح الطيران" : "Speak in English or Arabic to query GACAR regulatory corpus")
-                        .font(.system(size: 12))
+                    Text(language == .arabic ? "تحدث بأي سؤال تنظيمي وسيتم الرد صوتياً عبر اللاسلكي" : "Speak any aviation regulation query for synthesized radio response")
+                        .font(.system(size: 11.5))
                         .foregroundColor(AvionicsTheme.inkDim)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 30)
+                        .padding(.horizontal, 24)
                 }
 
-                Spacer()
+                Spacer(minLength: 10)
 
-                // Animated Audio Waveform in Cyan
-                AudioWaveformView(isListening: isListening)
-                    .frame(height: 70)
-                    .padding(.horizontal, 40)
+                // Live Pilot Transcript or Spoken Reply Card
+                VStack(spacing: 10) {
+                    if !voiceComms.liveTranscript.isEmpty {
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack {
+                                Text("PILOT // MIC IN")
+                                    .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.cyan)
+                                Spacer()
+                            }
+                            Text(voiceComms.liveTranscript)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(AvionicsTheme.ink)
+                                .lineLimit(3)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(AvionicsTheme.panel2.opacity(0.85))
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1))
+                        )
+                        .padding(.horizontal, 24)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
 
+                    if !assistantSpokenReply.isEmpty {
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack {
+                                Text("ADEL-1 // TRANSMITTING")
+                                    .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.mint)
+                                Spacer()
+                            }
+                            Text(assistantSpokenReply)
+                                .font(.system(size: 13, weight: .regular))
+                                .foregroundColor(AvionicsTheme.ink)
+                                .lineLimit(4)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(AvionicsTheme.panel.opacity(0.9))
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(AvionicsTheme.mint.opacity(0.4), lineWidth: 1))
+                        )
+                        .padding(.horizontal, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .frame(minHeight: 110)
+
+                Spacer(minLength: 10)
+
+                // Reactive Audio Waveform
+                AudioWaveformView(
+                    isListening: voiceComms.commsState == .listening,
+                    isSpeaking: voiceComms.commsState == .speaking,
+                    audioPower: voiceComms.audioPower
+                )
+                .frame(height: 70)
+                .padding(.horizontal, 36)
+
+                // Center Master PTT (Push-To-Talk) Button
                 ZStack {
                     Circle()
-                        .stroke(AvionicsTheme.teal.opacity(0.4), lineWidth: 2)
-                        .frame(width: 96, height: 96)
+                        .stroke(statusColor.opacity(0.35), lineWidth: 2)
+                        .frame(width: 98, height: 98)
 
-                    if isListening {
+                    if voiceComms.commsState == .listening || voiceComms.commsState == .speaking {
                         RotatingGlowRing(lineWidth: 2.5)
-                            .frame(width: 104, height: 104)
+                            .frame(width: 106, height: 106)
                     }
 
                     Button(action: {
-                        Haptics.medium()
-                        isListening.toggle()
+                        handleMicTap()
                     }) {
                         ZStack {
                             Circle()
-                                .fill(isListening ? AnyShapeStyle(AvionicsTheme.mintCyanGradient) : AnyShapeStyle(AvionicsTheme.panel2))
-                                .frame(width: 72, height: 72)
-                                .shadow(color: isListening ? AvionicsTheme.cyan.opacity(0.5) : .clear, radius: 14)
-                            Image(systemName: isListening ? "mic.fill" : "mic.slash.fill")
+                                .fill(buttonGradient)
+                                .frame(width: 74, height: 74)
+                                .shadow(color: statusColor.opacity(0.45), radius: 14)
+
+                            Image(systemName: micIconName)
                                 .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(isListening ? AvionicsTheme.bg : AvionicsTheme.inkDim)
+                                .foregroundColor(voiceComms.commsState == .idle ? AvionicsTheme.inkDim : AvionicsTheme.bg)
                         }
                     }
                     .buttonStyle(.pressable)
                 }
 
-                Text(language == .arabic ? "اضغط للمقاطعة أو إغلاق الميكروفون" : "TAP MIC TO TOGGLE TRANSMISSION")
+                Text(instructionSubtitle)
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundColor(AvionicsTheme.inkDim)
-
-                Spacer()
+                    .padding(.bottom, 20)
             }
         }
         .preferredColorScheme(.dark)
+        .task {
+            _ = await voiceComms.requestPermissions()
+            startListeningSession()
+        }
+        .onDisappear {
+            voiceComms.stopListening()
+            voiceComms.stopSpeaking()
+        }
+    }
+
+    // MARK: - Voice Actions
+    private func handleMicTap() {
+        Haptics.medium()
+        if voiceComms.commsState == .speaking {
+            voiceComms.stopSpeaking()
+            startListeningSession()
+        } else if voiceComms.commsState == .listening {
+            voiceComms.stopListening()
+        } else {
+            startListeningSession()
+        }
+    }
+
+    private func startListeningSession() {
+        voiceComms.startListening(language: language) { spokenPrompt in
+            Task {
+                await processPilotVoicePrompt(spokenPrompt)
+            }
+        }
+    }
+
+    private func processPilotVoicePrompt(_ prompt: String) async {
+        guard !prompt.isEmpty else { return }
+        voiceComms.commsState = .processing
+
+        // Send to AI service (offline vector search or cloud backend)
+        await aiService.sendMessage(prompt)
+
+        // Retrieve last answer
+        if let lastMessage = aiService.messages.last(where: { $0.sender == .captainAdel }) {
+            let answerText: String
+            if language == .arabic, let ar = lastMessage.arabicText, !ar.isEmpty {
+                answerText = ar
+            } else {
+                answerText = lastMessage.text
+            }
+
+            assistantSpokenReply = answerText
+            voiceComms.speak(text: answerText, language: language)
+        } else {
+            voiceComms.commsState = .idle
+        }
+    }
+
+    // MARK: - HUD Dynamic Styling
+    private var statusColor: Color {
+        switch voiceComms.commsState {
+        case .listening:
+            return AvionicsTheme.cyan
+        case .processing:
+            return AvionicsTheme.amber
+        case .speaking:
+            return AvionicsTheme.mint
+        case .idle:
+            return AvionicsTheme.inkDim
+        case .error:
+            return AvionicsTheme.red
+        }
+    }
+
+    private var statusTitle: String {
+        switch voiceComms.commsState {
+        case .listening:
+            return language == .arabic ? "استماع • RX" : "RX · LISTENING"
+        case .processing:
+            return language == .arabic ? "معالجة اللوائح..." : "RAG SEARCHING..."
+        case .speaking:
+            return language == .arabic ? "بث صوتي • TX" : "TX · TRANSMITTING"
+        case .idle:
+            return language == .arabic ? "جاهز" : "STANDBY"
+        case .error(let msg):
+            return msg.uppercased()
+        }
+    }
+
+    private var micIconName: String {
+        switch voiceComms.commsState {
+        case .listening:
+            return "mic.fill"
+        case .speaking:
+            return "speaker.wave.2.fill"
+        case .processing:
+            return "waveform"
+        case .idle, .error:
+            return "mic.slash.fill"
+        }
+    }
+
+    private var buttonGradient: AnyShapeStyle {
+        switch voiceComms.commsState {
+        case .listening:
+            return AnyShapeStyle(AvionicsTheme.mintCyanGradient)
+        case .speaking:
+            return AnyShapeStyle(LinearGradient(colors: [AvionicsTheme.amber, AvionicsTheme.mint], startPoint: .topLeading, endPoint: .bottomTrailing))
+        case .processing:
+            return AnyShapeStyle(LinearGradient(colors: [AvionicsTheme.amber, AvionicsTheme.cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
+        default:
+            return AnyShapeStyle(AvionicsTheme.panel2)
+        }
+    }
+
+    private var instructionSubtitle: String {
+        switch voiceComms.commsState {
+        case .listening:
+            return language == .arabic ? "تحدث بحرية • الصمت يرسل السؤال تلقائياً" : "SPEAK FREELY · PAUSE TO AUTO-TRANSMIT"
+        case .speaking:
+            return language == .arabic ? "اضغط على الزر لمقاطعة الكابتن" : "TAP MIC TO INTERRUPT TRANSMISSION"
+        case .processing:
+            return language == .arabic ? "جاري مطابقة لوائح GACAR الـ 74..." : "MATCHING 74 GACAR REGULATORY PARTS..."
+        case .idle:
+            return language == .arabic ? "اضغط على الميكروفون لبدء الإرسال" : "TAP MIC TO OPEN TRANSMISSION"
+        case .error:
+            return language == .arabic ? "اضغط لإعادة المحاولة" : "TAP TO RETRY"
+        }
     }
 }
