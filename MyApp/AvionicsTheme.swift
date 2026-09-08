@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Avionics Theme Design System (Matching captadel.com)
 enum AvionicsTheme {
@@ -27,6 +30,80 @@ enum AvionicsTheme {
         "GACAR PART 65 — AIRMEN OTHER THAN FLIGHT CREW",
         "GACAR PART 107 — UNMANNED AIRCRAFT SYSTEMS (DRONES)"
     ]
+
+    // MARK: - Gradient Tokens (trendy glass/glow layer on top of the captadel.com palette)
+    static let cyanTealGradient = LinearGradient(
+        colors: [cyan, teal],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let mintCyanGradient = LinearGradient(
+        colors: [mint, cyan],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
+    static let inkFadeGradient = LinearGradient(
+        colors: [ink, cyan],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
+    static let liveRingGradient = AngularGradient(
+        colors: [cyan, teal, mint, cyan],
+        center: .center
+    )
+
+    static func heroAura(_ accent: Color = teal) -> RadialGradient {
+        RadialGradient(
+            colors: [accent.opacity(0.38), cyan.opacity(0.14), .clear],
+            center: .center,
+            startRadius: 6,
+            endRadius: 150
+        )
+    }
+
+    static func glassStroke(_ accent: Color) -> LinearGradient {
+        LinearGradient(
+            colors: [accent.opacity(0.65), line.opacity(0.5), accent.opacity(0.15)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+}
+
+// MARK: - Haptics (cockpit tactile feedback)
+enum Haptics {
+    static func light() {
+        #if canImport(UIKit) && !os(macOS)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        #endif
+    }
+
+    static func medium() {
+        #if canImport(UIKit) && !os(macOS)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        #endif
+    }
+
+    static func selection() {
+        #if canImport(UIKit) && !os(macOS)
+        UISelectionFeedbackGenerator().selectionChanged()
+        #endif
+    }
+
+    static func success() {
+        #if canImport(UIKit) && !os(macOS)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        #endif
+    }
+
+    static func warning() {
+        #if canImport(UIKit) && !os(macOS)
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        #endif
+    }
 }
 
 // MARK: - Cross-Platform Image Provider
@@ -80,6 +157,149 @@ extension View {
             backgroundColor: backgroundColor,
             cornerRadius: cornerRadius
         ))
+    }
+}
+
+// MARK: - Frosted Glass Panel (trendy glassmorphism layer)
+struct GlassPanelModifier: ViewModifier {
+    var accent: Color = AvionicsTheme.cyan
+    var cornerRadius: CGFloat = 14
+    var glow: Bool = true
+    var tint: Double = 0.5
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(AvionicsTheme.panel.opacity(tint))
+                }
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AvionicsTheme.glassStroke(accent), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .shadow(color: glow ? accent.opacity(0.16) : .clear, radius: 18, x: 0, y: 10)
+    }
+}
+
+extension View {
+    func glassPanel(
+        accent: Color = AvionicsTheme.cyan,
+        cornerRadius: CGFloat = 14,
+        glow: Bool = true,
+        tint: Double = 0.5
+    ) -> some View {
+        modifier(GlassPanelModifier(accent: accent, cornerRadius: cornerRadius, glow: glow, tint: tint))
+    }
+}
+
+// MARK: - Gradient Border (lightweight accent, no material blur — for chips/pills)
+struct GradientBorderModifier: ViewModifier {
+    var accent: Color
+    var cornerRadius: CGFloat
+    var lineWidth: CGFloat = 1
+
+    func body(content: Content) -> some View {
+        content.overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(AvionicsTheme.glassStroke(accent), lineWidth: lineWidth)
+        )
+    }
+}
+
+extension View {
+    func gradientBorder(_ accent: Color, cornerRadius: CGFloat, lineWidth: CGFloat = 1) -> some View {
+        modifier(GradientBorderModifier(accent: accent, cornerRadius: cornerRadius, lineWidth: lineWidth))
+    }
+}
+
+// MARK: - Pressable Micro-Interaction Button Style
+struct PressableButtonStyle: ButtonStyle {
+    var scale: CGFloat = 0.96
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1.0)
+            .opacity(configuration.isPressed ? 0.88 : 1.0)
+            .animation(.spring(response: 0.28, dampingFraction: 0.62), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == PressableButtonStyle {
+    static var pressable: PressableButtonStyle { PressableButtonStyle() }
+}
+
+// MARK: - Rotating Glow Ring (avatar / live-status halo)
+struct RotatingGlowRing: View {
+    var lineWidth: CGFloat = 2
+    @State private var rotation: Double = 0
+
+    var body: some View {
+        Circle()
+            .stroke(AvionicsTheme.liveRingGradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+            .rotationEffect(.degrees(rotation))
+            .onAppear {
+                withAnimation(.linear(duration: 5).repeatForever(autoreverses: false)) {
+                    rotation = 360
+                }
+            }
+    }
+}
+
+// MARK: - Faint HUD Grid Overlay
+struct RadarGridOverlay: View {
+    var spacing: CGFloat = 30
+    var lineColor: Color = AvionicsTheme.line
+
+    var body: some View {
+        Canvas { context, size in
+            var x: CGFloat = 0
+            while x <= size.width {
+                var path = Path()
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(path, with: .color(lineColor), lineWidth: 0.5)
+                x += spacing
+            }
+            var y: CGFloat = 0
+            while y <= size.height {
+                var path = Path()
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(path, with: .color(lineColor), lineWidth: 0.5)
+                y += spacing
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Cockpit Ambient Backdrop (aurora glow blobs + faint HUD grid)
+struct CockpitBackdrop: View {
+    var body: some View {
+        ZStack {
+            AvionicsTheme.bg
+
+            RadarGridOverlay()
+                .opacity(0.045)
+
+            Circle()
+                .fill(AvionicsTheme.cyan.opacity(0.10))
+                .frame(width: 280, height: 280)
+                .blur(radius: 100)
+                .offset(x: -130, y: -260)
+
+            Circle()
+                .fill(AvionicsTheme.mint.opacity(0.07))
+                .frame(width: 240, height: 240)
+                .blur(radius: 110)
+                .offset(x: 150, y: 340)
+        }
+        .ignoresSafeArea()
     }
 }
 

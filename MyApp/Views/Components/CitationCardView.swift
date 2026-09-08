@@ -4,9 +4,12 @@ struct CitationCardView: View {
     let citation: GACARCitation
     let language: AppLanguage
     @State private var showDetailModal: Bool = false
-    
+
     var body: some View {
-        Button(action: { showDetailModal = true }) {
+        Button(action: {
+            Haptics.light()
+            showDetailModal = true
+        }) {
             VStack(alignment: .leading, spacing: 6) {
                 // Tactical Header Strip
                 HStack(spacing: 8) {
@@ -15,18 +18,15 @@ struct CitationCardView: View {
                         .foregroundColor(AvionicsTheme.cyan)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(AvionicsTheme.cyan.opacity(0.12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 3)
-                                .stroke(AvionicsTheme.cyan.opacity(0.3), lineWidth: 1)
-                        )
-                    
+                        .background(Capsule().fill(AvionicsTheme.cyan.opacity(0.12)))
+                        .overlay(Capsule().stroke(AvionicsTheme.cyan.opacity(0.3), lineWidth: 1))
+
                     Text(language == .arabic ? citation.category.arabicName : citation.category.rawValue)
                         .font(.system(size: 9.5, weight: .medium, design: .monospaced))
                         .foregroundColor(AvionicsTheme.inkDim)
-                    
+
                     Spacer()
-                    
+
                     HStack(spacing: 3) {
                         Text(language == .arabic ? "عرض النص" : "VERBATIM")
                             .font(.system(size: 8.5, weight: .bold, design: .monospaced))
@@ -36,13 +36,13 @@ struct CitationCardView: View {
                             .foregroundColor(AvionicsTheme.teal)
                     }
                 }
-                
+
                 // Regulation Title
                 Text(language == .arabic ? citation.arabicTitle : citation.title)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(AvionicsTheme.ink)
                     .lineLimit(1)
-                
+
                 // Verbatim Snippet
                 Text(language == .arabic ? citation.arabicVerbatimSnippet : citation.verbatimSnippet)
                     .font(.system(size: 11.5))
@@ -52,16 +52,9 @@ struct CitationCardView: View {
                     .multilineTextAlignment(.leading)
             }
             .padding(10)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(AvionicsTheme.panel2)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(AvionicsTheme.line, lineWidth: 1)
-                    )
-            )
+            .glassPanel(accent: AvionicsTheme.mint, cornerRadius: 10, glow: false, tint: 0.6)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .sheet(isPresented: $showDetailModal) {
             CitationDetailModal(citation: citation, language: language)
         }
@@ -72,12 +65,12 @@ struct CitationDetailModal: View {
     let citation: GACARCitation
     let language: AppLanguage
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
-                AvionicsTheme.bg.ignoresSafeArea()
-                
+                CockpitBackdrop()
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
                         // Section Code Header Strip
@@ -85,36 +78,26 @@ struct CitationDetailModal: View {
                             HStack {
                                 Text(citation.partNumber + (citation.sectionNumber.map { " § \($0)" } ?? ""))
                                     .font(.system(size: 24, weight: .heavy, design: .monospaced))
-                                    .foregroundColor(AvionicsTheme.cyan)
-                                
+                                    .foregroundStyle(AvionicsTheme.mintCyanGradient)
+
                                 Spacer()
-                                
+
                                 Text("GACAR CORPUS")
                                     .font(.system(size: 9.5, weight: .bold, design: .monospaced))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 4)
-                                    .background(AvionicsTheme.cyan.opacity(0.15))
+                                    .background(Capsule().fill(AvionicsTheme.cyan.opacity(0.15)))
                                     .foregroundColor(AvionicsTheme.cyan)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1)
-                                    )
+                                    .overlay(Capsule().stroke(AvionicsTheme.cyan.opacity(0.4), lineWidth: 1))
                             }
-                            
+
                             Text(language == .arabic ? citation.arabicTitle : citation.title)
                                 .font(.title3.weight(.bold))
                                 .foregroundColor(AvionicsTheme.ink)
                         }
                         .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(AvionicsTheme.panel)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(AvionicsTheme.line, lineWidth: 1)
-                                )
-                        )
-                        
+                        .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 14)
+
                         // Verbatim GACAR Text Box
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
@@ -124,7 +107,7 @@ struct CitationDetailModal: View {
                                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                                     .foregroundColor(AvionicsTheme.inkDim)
                             }
-                            
+
                             Text(language == .arabic ? citation.arabicVerbatimSnippet : citation.verbatimSnippet)
                                 .font(.system(size: 14.5, weight: .medium, design: .monospaced))
                                 .lineSpacing(6)
@@ -132,15 +115,15 @@ struct CitationDetailModal: View {
                                 .padding(14)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 8)
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                                         .fill(AvionicsTheme.panel2)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(AvionicsTheme.cyan.opacity(0.3), lineWidth: 1)
-                                        )
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .stroke(AvionicsTheme.cyan.opacity(0.35), lineWidth: 1)
                                 )
                         }
-                        
+
                         // Official Disclaimer Note
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "shield.lefthalf.filled")
@@ -153,14 +136,7 @@ struct CitationDetailModal: View {
                                 .lineSpacing(3)
                         }
                         .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(AvionicsTheme.panel)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(AvionicsTheme.amber.opacity(0.4), lineWidth: 1)
-                                )
-                        )
+                        .glassPanel(accent: AvionicsTheme.amber, cornerRadius: 10, glow: false)
                     }
                     .padding(16)
                 }
