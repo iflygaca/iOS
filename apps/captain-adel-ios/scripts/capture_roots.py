@@ -28,14 +28,12 @@ struct CaptainAdelApp: App {{
         f.write(content)
 
 def build_install_launch_snap(name):
-    # build
     print(f"Building for {name}...")
-    subprocess.run(f'xcodebuild -project captadel.xcodeproj -scheme MyApp -destination "id={DEVICE}" -derivedDataPath /tmp/CaptAdelBuild build > /dev/null', shell=True)
-    # reinstall
-    subprocess.run(f"xcrun simctl terminate {DEVICE} {BUNDLE}", shell=True)
-    subprocess.run(f"xcrun simctl install {DEVICE} '{APP_PATH}'", shell=True)
-    subprocess.run(f"xcrun simctl launch {DEVICE} {BUNDLE}", shell=True)
-    time.sleep(3)
+    subprocess.run(f'xcodebuild -project captadel.xcodeproj -scheme MyApp -destination "id={DEVICE}" -derivedDataPath /tmp/CaptAdelBuild build > /dev/null 2>&1', shell=True)
+    subprocess.run(f"xcrun simctl terminate {DEVICE} {BUNDLE} > /dev/null 2>&1", shell=True)
+    subprocess.run(f"xcrun simctl install {DEVICE} '{APP_PATH}' > /dev/null 2>&1", shell=True)
+    subprocess.run(f"xcrun simctl launch {DEVICE} {BUNDLE} > /dev/null 2>&1", shell=True)
+    time.sleep(5)
     out_path = f"{OUT}/{name}"
     subprocess.run(f"xcrun simctl io {DEVICE} screenshot {out_path}", shell=True)
     print(f"Saved {out_path}")
