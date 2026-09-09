@@ -403,7 +403,7 @@ final class CaptainAdelAIService: ObservableObject {
         // Fast on-device semantic vector retrieval across all 74 GACAR parts
         let retrieval = GACARVectorSearchEngine.shared.retrieve(query: userText)
         
-        var botMessage = ChatMessage(
+        let botMessage = ChatMessage(
             sender: .captainAdel,
             text: "",
             arabicText: "",

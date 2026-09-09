@@ -8,6 +8,18 @@ struct GACARLibraryView: View {
     @State private var selectedPart: GACARPart? = nil
     @FocusState private var isSearchFocused: Bool
 
+    // Quick discovery hashtag pills for high-traffic regulatory domains
+    private let trendingTags: [(tag: String, labelAr: String, labelEn: String)] = [
+        ("Part 61", "رخص الطيارين", "Pilot Licensing"),
+        ("Part 91", "قواعد التشغيل العامة", "General Operations"),
+        ("Part 107", "الدرونز UAS", "Drones / UAS"),
+        ("Part 121", "الناقلات الجوية", "Air Carriers"),
+        ("Part 67", "المعايير الطبية", "Medical Standards"),
+        ("Part 139", "المطارات والإنقاذ", "Aerodromes & ARFF"),
+        ("Part 65", "المرحلون والفنيون", "Dispatchers & Airmen"),
+        ("Part 43", "الصيانة والإصلاح", "Maintenance")
+    ]
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -25,7 +37,7 @@ struct GACARLibraryView: View {
                         Text(currentLanguage == .arabic ? "مستودع أنظمة GACAR" : "GACAR REGULATORY CORPUS")
                             .font(.system(size: 14, weight: .black, design: .monospaced))
                             .foregroundColor(AvionicsTheme.ink)
-                        Text(currentLanguage == .arabic ? "74 جزءاً مُسنداً بالكامل" : "74 Parts Indexed & Grounded")
+                        Text(currentLanguage == .arabic ? "74 جزءاً مسنداً بالكامل • بحث متقدم" : "74 Parts Indexed & Grounded • RAG Search")
                             .font(.system(size: 10, weight: .medium, design: .monospaced))
                             .foregroundColor(AvionicsTheme.mint)
                     }
@@ -99,6 +111,45 @@ struct GACARLibraryView: View {
                     .padding(.vertical, 6)
                 }
                 .background(AvionicsTheme.panel.opacity(0.5))
+
+                // Quick Discovery Topic Hashtags
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(trendingTags, id: \.tag) { item in
+                            let isCurrent = searchText.lowercased().contains(item.tag.lowercased())
+                            Button(action: {
+                                Haptics.light()
+                                if isCurrent {
+                                    searchText = ""
+                                } else {
+                                    searchText = item.tag
+                                }
+                            }) {
+                                HStack(spacing: 4) {
+                                    Text("#\(item.tag)")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    Text(currentLanguage == .arabic ? "• \(item.labelAr)" : "• \(item.labelEn)")
+                                        .font(.system(size: 9.5))
+                                }
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(isCurrent ? AvionicsTheme.cyan.opacity(0.2) : AvionicsTheme.panel2.opacity(0.7))
+                                )
+                                .foregroundColor(isCurrent ? AvionicsTheme.cyan : AvionicsTheme.inkDim)
+                                .overlay(
+                                    Capsule()
+                                        .stroke(isCurrent ? AvionicsTheme.cyan : AvionicsTheme.line.opacity(0.6), lineWidth: 0.8)
+                                )
+                            }
+                            .buttonStyle(.pressable)
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 5)
+                }
+                .background(AvionicsTheme.panel.opacity(0.3))
                 .overlay(
                     Rectangle()
                         .frame(height: 1)
@@ -185,7 +236,7 @@ struct GACARLibraryView: View {
             if searchText.isEmpty {
                 return matchesCategory
             }
-            let query = searchText.lowercased()
+            let query = searchText.lowercased().replacingOccurrences(of: "#", with: "")
             let matchesText = part.partNumber.lowercased().contains(query) ||
             part.titleEn.lowercased().contains(query) ||
             part.titleAr.contains(query) ||
@@ -254,6 +305,7 @@ struct CockpitGACARPartDetailSheet: View {
     let language: AppLanguage
     @ObservedObject var aiService: CaptainAdelAIService
     @Environment(\.dismiss) private var dismiss
+    @State private var copiedSectionCode: String? = nil
 
     var body: some View {
         NavigationStack {
@@ -307,21 +359,47 @@ struct CockpitGACARPartDetailSheet: View {
                                     .foregroundColor(AvionicsTheme.inkDim)
                                     .lineSpacing(3)
 
-                                Button(action: {
-                                    Haptics.light()
-                                    dismiss()
-                                    Task {
-                                        await aiService.sendMessage("Explain GACAR § \(sec.sectionCode) \(sec.titleEn)")
+                                HStack(spacing: 10) {
+                                    Button(action: {
+                                        Haptics.light()
+                                        dismiss()
+                                        Task {
+                                            await aiService.sendMessage("Explain GACAR § \(sec.sectionCode) \(sec.titleEn)")
+                                        }
+                                    }) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "sparkles")
+                                            Text(language == .arabic ? "اسأل كابتن عادل عن هذه المادة" : "Ask Captain Adel about § \(sec.sectionCode)")
+                                        }
+                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(AvionicsTheme.mintCyanGradient)
                                     }
-                                }) {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "sparkles")
-                                        Text(language == .arabic ? "اسأل كابتن عادل عن هذه المادة" : "Ask Captain Adel about § \(sec.sectionCode)")
+                                    .buttonStyle(.pressable)
+
+                                    Spacer()
+
+                                    Button(action: {
+                                        Haptics.success()
+                                        let text = "GACAR \(part.partNumber) § \(sec.sectionCode): \(sec.titleEn)\n\(sec.contentEn)\n(Source: GACA Saudi Civil Aviation Regulations)"
+                                        UIPasteboard.general.string = text
+                                        withAnimation {
+                                            copiedSectionCode = sec.sectionCode
+                                        }
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                            if copiedSectionCode == sec.sectionCode {
+                                                copiedSectionCode = nil
+                                            }
+                                        }
+                                    }) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: copiedSectionCode == sec.sectionCode ? "checkmark" : "doc.on.doc")
+                                            Text(copiedSectionCode == sec.sectionCode ? (language == .arabic ? "تم النسخ" : "Copied!") : (language == .arabic ? "نسخ السند" : "Copy"))
+                                        }
+                                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                        .foregroundColor(copiedSectionCode == sec.sectionCode ? AvionicsTheme.mint : AvionicsTheme.inkDim)
                                     }
-                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(AvionicsTheme.mintCyanGradient)
+                                    .buttonStyle(.pressable)
                                 }
-                                .buttonStyle(.pressable)
                                 .padding(.top, 4)
                             }
                             .padding(12)

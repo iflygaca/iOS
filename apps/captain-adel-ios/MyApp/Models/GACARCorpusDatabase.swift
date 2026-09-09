@@ -627,7 +627,14 @@ struct GACARCorpusDatabase {
             summaryEn: "The commercial airline standard: crew flight duty limitations, dispatch releases, ETOPS, passenger briefings, and emergency equipment.",
             summaryAr: "معايير عمليات خطوط الطيران التجارية الكبرى: ساعات عمل وراحة الطيارين، الترحيل الجوي، ومعدات الطوارئ.",
             keySections: [
-                GACARSection(
+                                GACARSection(
+                    sectionCode: "121.619",
+                    titleEn: "Alternate Airport for Destination: IFR (1-2-3 Rule)",
+                    titleAr: "المطار البديل لوجهة الهبوط: قواعد IFR (قاعدة 1-2-3)",
+                    contentEn: "No alternate airport is required if for at least 1 hour before and 1 hour after estimated time of arrival, the ceiling is at least 2,000 feet above airport elevation and visibility is at least 3 statute miles (5 km).",
+                    contentAr: "لا يشترط تحديد مطار بديل إذا كانت تقارير وتوقعات الطقس تشير إلى أن السقف الغيمي لا يقل عن 2,000 قدم فوق ارتفاع المطار والرؤية لا تقل عن 3 أميال قانونية (5 كم) لمدة ساعة واحدة قبل وساعة واحدة بعد وقت الوصول المقدر."
+                ),
+GACARSection(
                     sectionCode: "121.471",
                     titleEn: "Flight Time Limitations & Rest Requirements",
                     titleAr: "أوقات الطيران وفترات الراحة الإلزامية للطيارين",
@@ -939,7 +946,510 @@ struct GACARCorpusDatabase {
                     contentAr: "تسليم قائد الطائرة إشعاراً كتابياً (NOTOC) يوضح نوع وكمية وموقع البضائع الخطرة المشحونة على متن الطائرة."
                 )
             ]
+        ),
+        GACARPart(
+            id: "3",
+            partNumber: "GACAR Part 3",
+            titleEn: "General Requirements & Compliance",
+            titleAr: "المتطلبات العامة والامتثال للأنظمة",
+            category: .operations,
+            summaryEn: "Foundational rules requiring compliance with aviation regulations, safety directives, and reporting obligations.",
+            summaryAr: "القواعد الأساسية الملزمة بالامتثال للوائح الطيران المدني وتوجيهات السلامة الصادرة عن الهيئة العامة للطيران المدني.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "3.5",
+                    titleEn: "Falsification, Reproduction, or Alteration",
+                    titleAr: "تزوير أو تحريف السجلات والشهادات",
+                    contentEn: "Strict prohibition against making fraudulent or intentionally false statements on any application, logbook, or certificate.",
+                    contentAr: "حظر تام للإدلاء بأي بيانات غير صحيحة أو تزوير السجلات وسجلات الطيران والرخص والشهادات المعتمدة."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "7",
+            partNumber: "GACAR Part 7",
+            titleEn: "Aviation Safety Review & Oversight",
+            titleAr: "مراجعة ورقابة السلامة الجوية",
+            category: .operations,
+            summaryEn: "Procedures for aviation safety audits, inspections, and regulatory compliance reviews by GACA inspectors.",
+            summaryAr: "إجراءات التدقيق والرقابة الميدانية والتفتيش الدوري على المشغلين ومرافق الطيران المدني.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "7.11",
+                    titleEn: "Access for Inspection",
+                    titleAr: "صلاحيات التفتيش والرقابة الميدانية",
+                    contentEn: "Authorizes GACA inspectors unrestricted access to aircraft, facilities, and records to verify continued compliance.",
+                    contentAr: "منح مفتشي الهيئة العامة للطيران المدني صلاحية الدخول غير المقيد للطائرات والمنشآت والسجلات للتحقق من الامتثال."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "11",
+            partNumber: "GACAR Part 11",
+            titleEn: "General Rulemaking Procedures",
+            titleAr: "إجراءات سن وتعديل اللوائح التنظيمية",
+            category: .operations,
+            summaryEn: "Public petitioning, notice of proposed rulemaking, and exemption procedures under GACA administrative law.",
+            summaryAr: "آلية إصدار وتعديل لوائح الطيران المدني وتقديم الالتماسات وطلبات الاستثناءات النظامية.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "11.25",
+                    titleEn: "Petitions for Exemption",
+                    titleAr: "طلبات الاستثناء النظامي",
+                    contentEn: "Detailed criteria and safety risk assessment required when petitioning GACA for regulatory exemptions.",
+                    contentAr: "المعايير وتقييم مخاطر السلامة المطلوب عند التقدم بطلب استثناء من أحكام أي لائحة تنفيذية."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "26",
+            partNumber: "GACAR Part 26",
+            titleEn: "Continued Airworthiness & Safety Improvements",
+            titleAr: "استمرارية الجدارة الجوية والتحسينات الإلزامية",
+            category: .maintenance,
+            summaryEn: "Requirements for transport category airplanes: aging aircraft systems, damage tolerance, and fuel tank safety.",
+            summaryAr: "متطلبات طائرات النقل التجاري لمواجهة تقادم الهياكل والأنظمة والوقاية من اشتعال خزانات الوقود وتعب المعادن.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "26.33",
+                    titleEn: "Fuel Tank Flammability Reduction",
+                    titleAr: "الحد من قابلية اشتعال خزانات الوقود",
+                    contentEn: "Mandates nitrogen inerting systems or ignition mitigation means for center fuel tanks.",
+                    contentAr: "إلزامية تركيب أنظمة خمول النيتروجين أو وسائل خفض قابلية الاشتعال لخزانات الوقود المركزية."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "31",
+            partNumber: "GACAR Part 31",
+            titleEn: "Airworthiness Standards: Manned Free Balloons",
+            titleAr: "معايير الجدارة الجوية: المناطيد المأهولة الحرة",
+            category: .maintenance,
+            summaryEn: "Design, envelope integrity, burners, and control systems for commercial and private manned hot air balloons.",
+            summaryAr: "معايير تصميم ومتانة غلاف المنطاد ومواقد الاحتراق وأنظمة التحكم في مناطيد الهواء الساخن السياحية والخاصة.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "31.14",
+                    titleEn: "Envelope Deflation Systems",
+                    titleAr: "أنظمة تفريغ غلاف المنطاد في الطوارئ",
+                    contentEn: "Requires rapid deflation systems to prevent dragging upon landing in windy desert conditions.",
+                    contentAr: "اشتراط وجود أنظمة تفريغ سريع لمنع جر المنطاد على الأرض عند الهبوط في الظروف الصحراوية النشطة الرياح."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "34",
+            partNumber: "GACAR Part 34",
+            titleEn: "Fuel Venting & Exhaust Emission Requirements",
+            titleAr: "معايير تصريف الوقود وانبعاثات عادم الطائرات",
+            category: .maintenance,
+            summaryEn: "Environmental prevention of intentional fuel venting and emission standards for turbine-powered aircraft.",
+            summaryAr: "معايير حماية البيئة ومنع تصريف الوقود في الجو وضبط انبعاثات محركات الطائرات النفاثة والتوربينية.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "34.11",
+                    titleEn: "Fuel Venting Prevention",
+                    titleAr: "حظر تصريف الوقود غير المبرر",
+                    contentEn: "Requires aircraft fuel systems to discharge no liquid fuel runoff during normal ground operations and taxiing.",
+                    contentAr: "إلزام أنظمة وقود الطائرات بمنع أي تسرب أو تفريغ للوقود السائل أثناء العمليات الأرضية والتدريج."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "36",
+            partNumber: "GACAR Part 36",
+            titleEn: "Noise Standards: Aircraft Type & Airworthiness",
+            titleAr: "معايير الضوضاء: طراز الطائرة وشهادة الصلاحية",
+            category: .maintenance,
+            summaryEn: "Acoustical certification standards for subsonic jets, supersonic aircraft, and helicopters under ICAO Annex 16.",
+            summaryAr: "المعايير الصوتية والبيئية لقياس ضوضاء الطائرات النفاثة والمروحيات وفق الملحق السادس عشر لمنظمة الإيكاو.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "36.7",
+                    titleEn: "Acoustical Change & Noise Measurement",
+                    titleAr: "التغيرات الصوتية وقياس مستويات الضجيج",
+                    contentEn: "Standards for measuring effective perceived noise level (EPNdB) during flyover, lateral, and approach.",
+                    contentAr: "معايير قياس مستوى الضوضاء المدرك الفعلي (EPNdB) عند التحليق والاقتراب والمستوى الجانبي للمدرج."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "49",
+            partNumber: "GACAR Part 49",
+            titleEn: "Recording of Aircraft Titles & Security Documents",
+            titleAr: "تسجيل صكوك ووثائق ملكية ورهن الطائرات",
+            category: .operations,
+            summaryEn: "Official recording of conveyances, leases, liens, and mortgages on civil aircraft registered in Saudi Arabia.",
+            summaryAr: "إجراءات التوثيق الرسمي لعقود البيع والإيجار والرهون والامتيازات على الطائرات المسجلة في السجل السعودي.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "49.17",
+                    titleEn: "Conveyances Recorded",
+                    titleAr: "توثيق انتقال الملكية والرهون",
+                    contentEn: "Requires notarized submission of bills of sale and financing contracts to establish legal validity against third parties.",
+                    contentAr: "اشتراط تسجيل عقود البيع والتمويل رسمياً لدى الهيئة لإثبات حجيتها القانونية في مواجهة الغير."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "64",
+            partNumber: "GACAR Part 64",
+            titleEn: "Cabin Crew Licensing & Competency Standards",
+            titleAr: "معايير وترخيص أطقم الضيافة والمقصورة",
+            category: .licensing,
+            summaryEn: "Initial qualification, recurrent safety training, emergency evacuations, and aeromedical standards for cabin crew.",
+            summaryAr: "معايير التأهيل والتدريب السنوي وإجراءات الإخلاء في الطوارئ والمعايير الصحية لأطقم الضيافة الجوية.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "64.31",
+                    titleEn: "Emergency Evacuation Duties",
+                    titleAr: "واجبات الإخلاء في حالات الطوارئ",
+                    contentEn: "Mandatory practical drill competencies including 90-second aircraft evacuation, slide deployment, and ditching.",
+                    contentAr: "التدريبات العملية الإلزامية لإخلاء الطائرة في غضون 90 ثانية ونشر زلاقات النجاة والهبوط الاضطراري على الماء."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "68",
+            partNumber: "GACAR Part 68",
+            titleEn: "Remote Pilot Crew Medical Standards",
+            titleAr: "المعايير الطبية لمشغلي الطائرات بدون طيار (الدرونز)",
+            category: .licensing,
+            summaryEn: "Medical fitness declarations, visual acuity, and cognitive fitness required for beyond visual line of sight (BVLOS) operations.",
+            summaryAr: "معايير اللياقة الصحية والحدة البصرية والكفاءة الذهنية لمشغلي الدرونز في رحلات ما وراء مدى الرؤية البصرية (BVLOS).",
+            keySections: [
+                GACARSection(
+                    sectionCode: "68.5",
+                    titleEn: "Visual Acuity and Depth Perception",
+                    titleAr: "الحدة البصرية وإدراك المسافات لمشغلي الدرونز",
+                    contentEn: "Distant visual acuity of 20/20 corrected or uncorrected, with normal field of vision and color recognition.",
+                    contentAr: "اشتراط حدة إبصار 20/20 بنظارة أو بدونها مع سلامة مجال الرؤية والتمييز الدقيق للألوان الملاحية."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "73",
+            partNumber: "GACAR Part 73",
+            titleEn: "Special Use Airspace",
+            titleAr: "المجالات الجوية ذات الاستخدام الخاص والمحظورة",
+            category: .airports,
+            summaryEn: "Designation and operational rules for restricted, prohibited, danger, and military training airspaces across KSA.",
+            summaryAr: "تحديد وتصنيف المناطق المحظورة والمقيدة ومناطق التدريب العسكري في الأجواء السعودية وقواعد عبورها.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "73.13",
+                    titleEn: "Prohibited and Restricted Airspace Entry",
+                    titleAr: "شروط دخول المناطق المقيدة والمحظورة",
+                    contentEn: "No aircraft may operate within a prohibited area, or restricted area without explicit authorization from the controlling ATC agency.",
+                    contentAr: "يحظر تماماً على أي طائرة دخول المناطق المحظورة أو المقيدة دون تصريح مسبق وتنسيق مباشر مع وحدة المراقبة الجوية المسؤولة."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "97",
+            partNumber: "GACAR Part 97",
+            titleEn: "Standard Instrument Procedures",
+            titleAr: "إجراءات الطيران الآلي القياسية (SID / STAR / Approach)",
+            category: .operations,
+            summaryEn: "Establishment of standard instrument approach procedures, SIDs, STARs, and minimum takeoff visibility limits.",
+            summaryAr: "اعتماد إجراءات المغادرة الآلية القياسية (SID) والوصول الآلي (STAR) وإجراءات الاقتراب الدقيق وغير الدقيق بالمطارات.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "97.10",
+                    titleEn: "Takeoff Minimums and Obstacle Departure",
+                    titleAr: "الحدود الدنيا للإقلاع ومسارات تجنب العوائق",
+                    contentEn: "Defines standard climb gradients (200 ft/NM minimum) and takeoff weather minimums for commercial operators.",
+                    contentAr: "تحديد معدلات الصعود القياسية لتفادي العوائق (200 قدم/ميل بحري كحد أدنى) والحدود الدنيا للأرصاد عند الإقلاع."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "99",
+            partNumber: "GACAR Part 99",
+            titleEn: "Security Control of Air Traffic (ADIZ)",
+            titleAr: "المراقبة الأمنية للحركة الجوية ومنطقة تشخيص الدفاع الجوي",
+            category: .operations,
+            summaryEn: "Mandates flight plans, two-way radio communications, and transponder operation when entering the Saudi ADIZ.",
+            summaryAr: "قواعد خطط الطيران الإلزامية والاتصال اللاسلكي وتشغيل أجهزة التعرف (Transponder) عند دخول منطقة تشخيص الدفاع الجوي.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "99.11",
+                    titleEn: "Flight Plan and Position Reporting in ADIZ",
+                    titleAr: "خطة الطيران والإبلاغ عن الموقع في منطقة ADIZ",
+                    contentEn: "Requires IFR or Defense VFR (DVFR) flight plan and position reports prior to entering the Air Defense Identification Zone.",
+                    contentAr: "إلزام تقديم خطة طيران IFR أو DVFR والإبلاغ عن الموقع قبل اختراق منطقة تشخيص الدفاع الجوي للمملكة."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "108",
+            partNumber: "GACAR Part 108",
+            titleEn: "Air Operator Security Programs",
+            titleAr: "البرامج الأمنية للمشغلين الجويين",
+            category: .operations,
+            summaryEn: "Passenger screening, baggage inspection, cockpit door security, and in-flight security coordinator protocols.",
+            summaryAr: "إجراءات تفتيش الركاب والأمتعة وتحصين أبواب قمرة القيادة وبروتوكولات منسق الأمن على متن الطائرات.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "108.9",
+                    titleEn: "Flight Deck Security and Access Control",
+                    titleAr: "أمن قمرة القيادة وضبط الدخول",
+                    contentEn: "Reinforced flight deck door must remain locked from exterior during flight except for necessary physiological crew duties.",
+                    contentAr: "إلزام إغلاق وقفل باب مقصورة القيادة المصفح طوال مدة الرحلة باستثناء الظروف التشغيلية الحتمية."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "109",
+            partNumber: "GACAR Part 109",
+            titleEn: "Indirect Air Carrier & Freight Forwarder Security",
+            titleAr: "أمن وسطاء الشحن الجوي والطرود",
+            category: .operations,
+            summaryEn: "Security vetting, cargo screening, and chain of custody for air cargo transported on passenger or cargo flights.",
+            summaryAr: "معايير الفحص الأمني للشحنات الجوية وسلسلة الحيازة الآمنة للبضائع المنقولة جواً على متن الطائرات التجارية.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "109.5",
+                    titleEn: "Known Consignor & Cargo Screening",
+                    titleAr: "نظام الشاحن المعتمد وتفتيش الشحنات",
+                    contentEn: "All cargo originating from non-known consignors must undergo 100% explosive trace or X-ray screening.",
+                    contentAr: "إخضاع جميع الشحنات غير الصادرة عن جهات شحن معتمدة للفحص الإشعاعي بنسبة 100% قبل التحميل."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "111",
+            partNumber: "GACAR Part 111",
+            titleEn: "Aviation Fuel Supply Quality & Safety Standards",
+            titleAr: "معايير جودة وسلامة إمدادات وقود الطيران",
+            category: .airports,
+            summaryEn: "Quality assurance, filtration, water check testing, storage farm inspections, and airport fueling operations.",
+            summaryAr: "ضمان جودة وقود الطائرات (Jet A-1 / Avgas) واختبارات نقاء المياه وتفتيش صهاريج ومحطات التزويد بالمطارات.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "111.15",
+                    titleEn: "Fuel Quality Testing and Contamination Checks",
+                    titleAr: "اختبارات نقاء الوقود وفحص الشوائب والرواسب",
+                    contentEn: "Daily water detector capsule testing and filter differential pressure monitoring prior to aircraft fueling.",
+                    contentAr: "الفحص اليومي بالكبسولات الكاشفة للماء ومراقبة فرق الضغط في فلاتر التزود بالوقود قبل تغذية الطائرات."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "115",
+            partNumber: "GACAR Part 115",
+            titleEn: "Ground Handling Services & Ramp Safety",
+            titleAr: "خدمات المناولة الأرضية وسلامة ساحات الطائرات",
+            category: .airports,
+            summaryEn: "Certification of ground handlers, marshalling, pushback operations, ground support equipment (GSE), and FOD control.",
+            summaryAr: "ترخيص شركات المناولة الأرضية وإجراءات الإرشاد والدفع الخلفي (Pushback) ومكافحة الأجسام الغريبة (FOD).",
+            keySections: [
+                GACARSection(
+                    sectionCode: "115.22",
+                    titleEn: "Foreign Object Debris (FOD) Prevention",
+                    titleAr: "برامج الوقاية من الأجسام الغريبة (FOD)",
+                    contentEn: "Mandatory regular sweeps and immediate clean-up protocols on aircraft stands and taxiway apron areas.",
+                    contentAr: "حملات التمشيط اليومية الإلزامية وإزالة المخلفات الفورية من مواقف الطائرات ومسارات ساحات المطار."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "120",
+            partNumber: "GACAR Part 120",
+            titleEn: "Drug and Alcohol Testing Program",
+            titleAr: "برنامج فحص المؤثرات العقلية والكحول لمنسوبي الطيران",
+            category: .licensing,
+            summaryEn: "Mandatory pre-employment, random, post-accident, and reasonable-suspicion testing for safety-sensitive personnel.",
+            summaryAr: "الفحص الإلزامي قبل التوظيف والفحص العشوائي وبعد الحوادث للطيارين والمراقبين الجويين ومهندسي الصيانة.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "120.33",
+                    titleEn: "Random Testing Protocols and Alcohol Limits",
+                    titleAr: "ضوابط الفحص العشوائي ونسبة الكحول الصفرية",
+                    contentEn: "Zero-tolerance policy: alcohol concentration above 0.00% or within 8 hours of flight duty constitutes immediate disqualification.",
+                    contentAr: "سياسة عدم التهاون التام: حظر تعاطي أي نسبة كحول أو مهدئات خلال 8 ساعات قبل أداء واجبات الطيران."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "136",
+            partNumber: "GACAR Part 136",
+            titleEn: "Commercial Air Tours & Sightseeing Operations",
+            titleAr: "عمليات الجولات الجوية السياحية واستطلاع المعالم",
+            category: .operations,
+            summaryEn: "Altitude minimums, environmental noise curfews, and passenger briefings for scenic flights around heritage sites.",
+            summaryAr: "معايير الارتفاعات الآمنة والحد من الضجيج وإجراءات السلامة لرحلات الاستطلاع السياحي فوق المواقع التراثية (مثل العلا).",
+            keySections: [
+                GACARSection(
+                    sectionCode: "136.17",
+                    titleEn: "Minimum Altitudes Over Sensitive Heritage Zones",
+                    titleAr: "الحد الأدنى للارتفاع فوق المناطق الأثرية المحمية",
+                    contentEn: "Mandates minimum 2,000 feet AGL over protected national heritage sites except on designated approved visual flight paths.",
+                    contentAr: "حظر الطيران تحت ارتفاع 2,000 قدم فوق سطح الأرض في المواقع التراثية المحمية إلا في مسارات معتمدة مسبقاً."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "143",
+            partNumber: "GACAR Part 143",
+            titleEn: "Flight Training Devices & Aviation Ground Schools",
+            titleAr: "أجهزة المحاكاة والتدريب والمدارس الأرضية للطيران",
+            category: .licensing,
+            summaryEn: "Certification standards for Full Flight Simulators (FFS Levels A-D) and Flight Training Devices (FTD).",
+            summaryAr: "معايير اعتماد وتقييم أجهزة المحاكاة التشبيهية الكاملة (FFS من الفئة A إلى D) وأجهزة التدريب التشبيهي.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "143.9",
+                    titleEn: "Level D Full Flight Simulator Certification",
+                    titleAr: "اعتماد أجهزة المحاكاة التشبيهية الكاملة الفئة D",
+                    contentEn: "Full motion 6-degrees-of-freedom, high-fidelity day/night visual systems, and validation against aircraft flight test data.",
+                    contentAr: "اشتراط حركة كاملة بـ 6 درجات حرية ورؤية بصرية نهارية/ليلية متطابقة مع بيانات اختبار الطيران الحقيقية للطائرة."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "149",
+            partNumber: "GACAR Part 149",
+            titleEn: "Recreational & Light Sport Aviation Organizations",
+            titleAr: "منظمات وأندية الطيران الترفيهي والرياضي الخفيف",
+            category: .operations,
+            summaryEn: "Oversight, safety management, airworthiness standards, and pilot certifications for sport aviation clubs.",
+            summaryAr: "قواعد الإشراف وإدارة السلامة وإصدار التراخيص لأندية الطيران الشراعي والرياضي الخفيف في المملكة.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "149.12",
+                    titleEn: "Operating Sites and Flight Envelopes",
+                    titleAr: "مواقع الأنشطة ومجالات الطيران الترفيهي",
+                    contentEn: "Operations restricted to designated approved club airfields outside controlled terminal airspace (CTR/TMA).",
+                    contentAr: "حصر أنشطة الطيران الترفيهي في المهابط والأندية المعتمدة خارج نطاق المجالات الجوية الخاضعة للمراقبة للمطارات الدولية."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "151",
+            partNumber: "GACAR Part 151",
+            titleEn: "Airport Development & Master Planning Aid",
+            titleAr: "المخططات الشاملة وتطوير وتوسعة المطارات",
+            category: .airports,
+            summaryEn: "Master plan submission, runway capacity projections, obstacle limitation surfaces, and terminal expansion standards.",
+            summaryAr: "إعداد المخططات الشاملة لتوسعة المطارات ومطارات الرؤية 2030 وتحديد أسطح تحديد العوائق وسعة المدارج.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "151.8",
+                    titleEn: "Airport Master Plan Approval",
+                    titleAr: "اعتماد المخطط الرئيسي لتطوير المطار",
+                    contentEn: "Requires 20-year traffic forecasts, environmental impact assessment, and GACA approval before major civil construction.",
+                    contentAr: "اشتراط دراسات حركة الطيران لـ 20 عاماً وتقييم الأثر البيئي واعتماد الهيئة قبل البدء في أعمال الإنشاءات الكبرى."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "152",
+            partNumber: "GACAR Part 152",
+            titleEn: "Airport Aid Programs & Infrastructure Grants",
+            titleAr: "برامج دعم وتطوير البنية التحتية للمطارات",
+            category: .airports,
+            summaryEn: "Standards and auditing for infrastructure funding, runway resurfacing, navigation aids, and safety perimeter fencing.",
+            summaryAr: "معايير التمويل والتدقيق على مشاريع سفلتة المدارج وتركيب المساعدات الملاحية والأسوار الأمنية للمطارات.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "152.14",
+                    titleEn: "Safety Perimeter and Security Fencing",
+                    titleAr: "الأسوار الأمنية وحماية حرم المطار",
+                    contentEn: "Requires intrusion detection systems, anti-burrowing mesh, and constant perimeter patrols for all certified airports.",
+                    contentAr: "إلزام تسييج حرم المطار بأنظمة استشعار الاختراق وشبك حماية أرضي ودوريات أمنية على مدار الساعة."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "156",
+            partNumber: "GACAR Part 156",
+            titleEn: "National Airport System Planning",
+            titleAr: "التخطيط الاستراتيجي لمنظومة المطارات الوطنية",
+            category: .airports,
+            summaryEn: "Strategic integration of international hubs, regional feeder airports, and domestic tourist aerodromes.",
+            summaryAr: "التكامل الاستراتيجي بين المطارات المحورية الدولية والمطارات الإقليمية ومطارات الوجهات السياحية الوطنية.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "156.4",
+                    titleEn: "Airport Classification Criteria",
+                    titleAr: "معايير تصنيف المطارات الوطنية",
+                    contentEn: "Classifies aerodromes into Primary Hubs, Regional Gateways, and General Aviation Community Airfields.",
+                    contentAr: "تصنيف المطارات في المملكة إلى مطارات محورية رئيسية، وبوابات إقليمية، ومطارات طيران عام تخدم المجتمعات المحلية."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "161",
+            partNumber: "GACAR Part 161",
+            titleEn: "Airport Noise & Access Restrictions",
+            titleAr: "ضوابط وقيود الضوضاء ومواعيد العمل في المطارات",
+            category: .airports,
+            summaryEn: "Rules governing nighttime flight curfews, preferential runway noise abatement, and noise contour modeling.",
+            summaryAr: "ضوابط حظر الطيران الليلي في المطارات الحضرية ومسارات خفض الضوضاء التفصيلية ونمذجة خرائط التلوث الصوتي.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "161.9",
+                    titleEn: "Noise Abatement Departure Procedures (NADP)",
+                    titleAr: "إجراءات المغادرة للحد من الضوضاء (NADP-1 / NADP-2)",
+                    contentEn: "Mandates specific thrust reduction and flap retraction schedules to minimize aircraft noise over residential neighborhoods.",
+                    contentAr: "تحديد بروتوكولات تقليل قوة الدفع ورفع القلابات لتفادي التأثير الصوتي فوق التجمعات السكنية المجاورة للمطار."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "174",
+            partNumber: "GACAR Part 174",
+            titleEn: "Aviation Meteorology Services (MET)",
+            titleAr: "خدمات الأرصاد الجوية للطيران (METAR / TAF / SIGMET)",
+            category: .airports,
+            summaryEn: "Certification of aviation weather providers, automated weather stations (AWOS), TAF forecasting, and SIGMET advisories.",
+            summaryAr: "ترخيص مقدمي خدمات أرصاد الطيران ومحطات الرصد الآلية (AWOS) وإصدار التنبؤات والتحذيرات الجوية من العواصف الرملية.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "174.15",
+                    titleEn: "Sandstorm and Dust Phenomenon Advisories",
+                    titleAr: "تحذيرات العواصف الرملية وانخفاض الرؤية",
+                    contentEn: "Mandates immediate issuance of SIGMET and SPECI reports when blowing sand reduces visibility below 1,000 meters.",
+                    contentAr: "إلزامية إصدار تقارير SIGMET فورية عند انخفاض الرؤية إلى أقل من 1,000 متر بسبب العواصف الرملية والعوالق الترابية."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "176",
+            partNumber: "GACAR Part 176",
+            titleEn: "Aeronautical Information Services (AIS / NOTAM)",
+            titleAr: "خدمات معلومات الطيران وإصدار النوتام (NOTAM / AIP)",
+            category: .airports,
+            summaryEn: "Publishing Aeronautical Information Publication (AIP), NOTAM issuance, AIRAC cycles, and pre-flight briefing bulletins.",
+            summaryAr: "نشر دليل معلومات الطيران السعودي (AIP) وإصدار إعلانات الطيارين (NOTAM) ودورات AIRAC لتحديث أنظمة الملاحة.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "176.20",
+                    titleEn: "NOTAM Issuance and AIRAC Publication Cycles",
+                    titleAr: "إصدار النوتام ودورات تحديث AIRAC (كل 28 يوماً)",
+                    contentEn: "Strict 28-day AIRAC publication cycle for permanent changes in airspace, navigation aids, and instrument procedures.",
+                    contentAr: "الالتزام التام بدورة AIRAC العالمية كل 28 يوماً لتحديث بيانات مسارات الملاحة والترددات والمطارات في أجهزة الطائرات."
+                )
+            ]
+        ),
+        GACARPart(
+            id: "178",
+            partNumber: "GACAR Part 178",
+            titleEn: "Search and Rescue Organization (SAR)",
+            titleAr: "خدمات ومنظومة البحث والإنقاذ الجوي",
+            category: .operations,
+            summaryEn: "Establishment of Rescue Coordination Centers (RCC), emergency locator transmitter (ELT 406 MHz) tracking, and desert rescue.",
+            summaryAr: "تنظيم مراكز تنسيق الإنقاذ (RCC) ومتابعة إشارات أجهزة الاستغاثة (ELT بتردد 406 ميجاهرتز) وعمليات الإنقاذ في المناطق الصحراوية.",
+            keySections: [
+                GACARSection(
+                    sectionCode: "178.11",
+                    titleEn: "Emergency Locator Transmitter (ELT 406 MHz) Monitoring",
+                    titleAr: "مراقبة أجهزة بث الاستغاثة في الطوارئ (ELT 406 MHz)",
+                    contentEn: "Continuous 24/7 satellite monitoring via Cospas-Sarsat and direct alerting within 15 minutes of signal distress.",
+                    contentAr: "المراقبة الفضائية المستمرة على مدار 24 ساعة عبر أقمار كوزباس-سارسات وإطلاق الاستجابة خلال 15 دقيقة من استلام إشارة الاستغاثة."
+                )
+            ]
         )
     ]
 }
-

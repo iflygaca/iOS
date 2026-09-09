@@ -8,22 +8,30 @@ struct ChatView: View {
     @State private var showSettingsModal: Bool = false
     @FocusState private var isInputFocused: Bool
 
-    // Exact prompt pills matching captadel.com queries
+    // Expanded prompt pills matching captadel.com authoritative queries
     private let promptPillsEn = [
         "VFR weather minima in Class C/D? (§91.155)",
         "Fuel reserve for VFR night flight? (§91.151)",
+        "Alternate airport 1-2-3 rule? (§121.619)",
+        "Drone night flight lighting rules? (§107.29)",
+        "Class 1 Medical validity under age 40? (§67.13)",
         "Minimum safe altitude over cities? (§91.119)",
         "Speed limit below 10,000 ft? (§91.117)",
         "Recent flight experience for passengers? (§61.57)",
+        "Aircraft Dispatcher age & requirements? (§65.53)",
         "Suborbital hops over Empty Quarter? (Refusal)"
     ]
 
     private let promptPillsAr = [
         "الحد الأدنى للرؤية VFR في الأجواء المراقبة؟ (§91.155)",
         "احتياطي الوقود للطيران البصري ليلاً؟ (§91.151)",
+        "قاعدة 1-2-3 لتحديد المطار البديل؟ (§121.619)",
+        "متطلبات إضاءة الدرونز في الطيران الليلي؟ (§107.29)",
+        "صلاحية الفحص الطبي فئة أولى دون سن 40؟ (§67.13)",
         "الارتفاع الآمن فوق المدن والمناطق المأهولة؟ (§91.119)",
         "السرعة القصوى تحت 10,000 قدم؟ (§91.117)",
         "شروط الخبرة الحديثة لنقل الركاب؟ (§61.57)",
+        "شروط رخصة مرحل جوي Dispatcher؟ (§65.53)",
         "رحلات مدارية فوق الربع الخالي؟ (تجربة الاعتذار)"
     ]
 
@@ -101,7 +109,7 @@ struct ChatView: View {
                     .padding(.vertical, 12)
                 }
                 .background(CockpitBackdrop())
-                .onChange(of: aiService.messages.count) { _ in
+                .onChange(of: aiService.messages.count) {
                     if let lastMsg = aiService.messages.last {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                             proxy.scrollTo(lastMsg.id, anchor: .bottom)

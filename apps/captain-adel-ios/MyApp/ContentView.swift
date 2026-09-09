@@ -23,7 +23,9 @@ struct ContentView: View {
             AboutView(currentLanguage: $currentLanguage)
                 .tag(3)
         }
+        #if os(iOS)
         .toolbar(.hidden, for: .tabBar)
+        #endif
         .accentColor(AvionicsTheme.cyan)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             CockpitTabBar(selectedTab: $selectedTab, language: currentLanguage)

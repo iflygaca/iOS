@@ -1,11 +1,10 @@
 import Foundation
-import SwiftUI
-import Combine
-import Speech
 import AVFoundation
+import Speech
+import Combine
 
-/// Comms state in the cockpit voice assistant
-enum CommsState: Equatable {
+// MARK: - Cockpit Comms State
+enum CockpitCommsState: Equatable {
     case idle
     case listening
     case processing
@@ -13,70 +12,66 @@ enum CommsState: Equatable {
     case error(String)
 }
 
-/// Hands-Free Cockpit Voice Service utilizing Apple's Speech & AVFoundation frameworks
+// MARK: - Cockpit Voice Comms Service
+// Full duplex aviation radio communications simulation for Captain Adel
 @MainActor
-final class CockpitVoiceCommsService: NSObject, ObservableObject {
+final class CockpitVoiceCommsService: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     static let shared = CockpitVoiceCommsService()
 
-    @Published var commsState: CommsState = .idle
+    @Published var commsState: CockpitCommsState = .idle
     @Published var liveTranscript: String = ""
+    @Published var audioPower: Float = 0.0 // 0.0 to 1.0 for dynamic HUD waveform
     @Published var lastSpokenText: String = ""
-    @Published var audioPower: Float = 0.0
-    @Published var isPermissionGranted: Bool = false
 
+    private let speechRecognizerEn = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private let speechRecognizerAr = SFSpeechRecognizer(locale: Locale(identifier: "ar-SA"))
     private var speechRecognizer: SFSpeechRecognizer?
+
+    private var audioEngine = AVAudioEngine()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
-    private let audioEngine = AVAudioEngine()
     private let speechSynthesizer = AVSpeechSynthesizer()
 
     private var silenceTimer: Timer?
     private var onSpeechFinished: ((String) -> Void)?
 
-    override init() {
+    override private init() {
         super.init()
         speechSynthesizer.delegate = self
     }
 
     // MARK: - Permissions
     func requestPermissions() async -> Bool {
-        let speechAuth = await withCheckedContinuation { continuation in
+        let speechStatus = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in
                 continuation.resume(returning: status == .authorized)
             }
         }
 
-        let audioAuth: Bool
+        let recordStatus: Bool
         if #available(iOS 17.0, *) {
-            audioAuth = await AVAudioApplication.requestRecordPermission()
+            recordStatus = await AVAudioApplication.requestRecordPermission()
         } else {
-            audioAuth = await withCheckedContinuation { continuation in
+            recordStatus = await withCheckedContinuation { continuation in
                 AVAudioSession.sharedInstance().requestRecordPermission { granted in
                     continuation.resume(returning: granted)
                 }
             }
         }
 
-        let granted = speechAuth && audioAuth
-        self.isPermissionGranted = granted
-        return granted
+        return speechStatus && recordStatus
     }
 
-    // MARK: - Speech Recognition (Listening)
-    func startListening(
-        language: AppLanguage,
-        onSilenceDetected: @escaping (String) -> Void
-    ) {
-        // Stop any ongoing speech playback or active task
+    // MARK: - Speech Recognition (Audio Input)
+    func startListening(language: AppLanguage, onFinished: @escaping (String) -> Void) {
         stopSpeaking()
         stopListening()
 
-        self.onSpeechFinished = onSilenceDetected
+        self.onSpeechFinished = onFinished
         self.liveTranscript = ""
         self.commsState = .listening
 
-        let locale = language == .arabic ? Locale(identifier: "ar-SA") : Locale(identifier: "en-US")
-        speechRecognizer = SFSpeechRecognizer(locale: locale)
+        speechRecognizer = (language == .arabic) ? speechRecognizerAr : speechRecognizerEn
 
         guard let speechRecognizer = speechRecognizer, speechRecognizer.isAvailable else {
             self.commsState = .error(language == .arabic ? "التعرف على الصوت غير متاح" : "Speech recognizer unavailable")
@@ -85,7 +80,7 @@ final class CockpitVoiceCommsService: NSObject, ObservableObject {
 
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetoothHFP])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
             recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
@@ -97,9 +92,20 @@ final class CockpitVoiceCommsService: NSObject, ObservableObject {
             let recordingFormat = inputNode.outputFormat(forBus: 0)
 
             inputNode.removeTap(onBus: 0)
-            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-                self?.recognitionRequest?.append(buffer)
-                self?.calculateAudioLevel(from: buffer)
+            if #available(iOS 27.0, *) {
+                try inputNode.installAudioTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+                    Task { @MainActor [weak self] in
+                        guard let self = self else { return }
+                        let pcmBuffer = AVAudioPCMBuffer(copying: buffer)
+                        self.recognitionRequest?.append(pcmBuffer)
+                        self.calculateAudioLevel(from: pcmBuffer)
+                    }
+                }
+            } else {
+                inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
+                    self?.recognitionRequest?.append(buffer)
+                    self?.calculateAudioLevel(from: buffer)
+                }
             }
 
             audioEngine.prepare()
@@ -136,17 +142,16 @@ final class CockpitVoiceCommsService: NSObject, ObservableObject {
             audioEngine.stop()
             audioEngine.inputNode.removeTap(onBus: 0)
         }
-
         recognitionRequest?.endAudio()
         recognitionRequest = nil
-
         recognitionTask?.cancel()
         recognitionTask = nil
 
-        if commsState == .listening {
+        audioPower = 0.0
+
+        if case .listening = commsState {
             commsState = .idle
         }
-        audioPower = 0.0
     }
 
     private func resetSilenceTimer() {
@@ -204,60 +209,47 @@ final class CockpitVoiceCommsService: NSObject, ObservableObject {
 
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .voicePrompt, options: [.duckOthers, .defaultToSpeaker])
+            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetoothHFP])
             try session.setActive(true)
+            speechSynthesizer.speak(utterance)
         } catch {
-            print("Audio session configuration error: \(error)")
+            commsState = .error(error.localizedDescription)
         }
-
-        speechSynthesizer.speak(utterance)
     }
 
     func stopSpeaking() {
         if speechSynthesizer.isSpeaking {
             speechSynthesizer.stopSpeaking(at: .immediate)
         }
-        if commsState == .speaking {
+        if case .speaking = commsState {
             commsState = .idle
         }
     }
 
-    private func cleanMarkdownForSpeech(_ text: String) -> String {
-        var clean = text
-        // Remove bold/italics
-        clean = clean.replacingOccurrences(of: "**", with: "")
-        clean = clean.replacingOccurrences(of: "*", with: "")
-        clean = clean.replacingOccurrences(of: "#", with: "")
-        clean = clean.replacingOccurrences(of: "`", with: "")
-        clean = clean.replacingOccurrences(of: "§", with: "Section ")
-        // Keep text concise for radio transmission (limit to first 450 characters if too long)
-        if clean.count > 450 {
-            let prefix = String(clean.prefix(450))
-            if let lastPeriod = prefix.lastIndex(of: ".") {
-                clean = String(prefix[...lastPeriod])
-            } else {
-                clean = prefix + "..."
-            }
-        }
-        return clean.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
-
-// MARK: - AVSpeechSynthesizerDelegate
-extension CockpitVoiceCommsService: AVSpeechSynthesizerDelegate {
+    // MARK: - AVSpeechSynthesizerDelegate
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         Task { @MainActor in
-            if self.commsState == .speaking {
-                self.commsState = .idle
-            }
+            self.commsState = .idle
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         Task { @MainActor in
-            if self.commsState == .speaking {
-                self.commsState = .idle
-            }
+            self.commsState = .idle
         }
+    }
+
+    // Strips markdown headers, bullet points, asterisks and emojis for speech
+    private func cleanMarkdownForSpeech(_ text: String) -> String {
+        var clean = text
+        clean = clean.replacingOccurrences(of: "**", with: "")
+        clean = clean.replacingOccurrences(of: "*", with: "")
+        clean = clean.replacingOccurrences(of: "###", with: "")
+        clean = clean.replacingOccurrences(of: "##", with: "")
+        clean = clean.replacingOccurrences(of: "#", with: "")
+        clean = clean.replacingOccurrences(of: "`", with: "")
+        clean = clean.replacingOccurrences(of: "§", with: "Section ")
+        clean = clean.replacingOccurrences(of: "•", with: "")
+        return clean.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

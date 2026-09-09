@@ -12,6 +12,7 @@ enum AvionicsTheme {
     static let line = Color(red: 26/255, green: 37/255, blue: 64/255)    // #1a2540
     static let ink = Color(red: 230/255, green: 237/255, blue: 246/255)  // #e6edf6
     static let inkDim = Color(red: 139/255, green: 152/255, blue: 173/255) // #8b98ad
+    static let secondary = inkDim                                         // Secondary label / icon color
     static let cyan = Color(red: 34/255, green: 211/255, blue: 238/255)  // #22d3ee
     static let teal = Color(red: 45/255, green: 142/255, blue: 168/255)  // #2d8ea8
     static let mint = Color(red: 52/255, green: 211/255, blue: 153/255)  // #34d399
@@ -381,4 +382,3 @@ struct GACARTickerTapeView: View {
         )
     }
 }
-

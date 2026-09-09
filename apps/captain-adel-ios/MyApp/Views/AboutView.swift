@@ -43,7 +43,7 @@ struct AboutView: View {
                                         .foregroundColor(AvionicsTheme.cyan)
                                 }
 
-                                Text(currentLanguage == .arabic ? "مدرّب الطيران الذكي للوائح الطيران المدني السعودي (GACAR)" : "AI Flight Instructor for Saudi Civil Aviation (GACAR)")
+                                Text(currentLanguage == .arabic ? "مدرب الطيران الذكي للوائح الطيران المدني السعودي (GACAR)" : "AI Flight Instructor for Saudi Civil Aviation (GACAR)")
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundColor(AvionicsTheme.teal)
                                     .multilineTextAlignment(.center)
@@ -78,6 +78,49 @@ struct AboutView: View {
                         }
                         .padding(14)
                         .glassPanel(accent: AvionicsTheme.teal, cornerRadius: 12, glow: false, tint: 0.6)
+
+                        // Avionics Data Bank & App Telemetry Breakdown
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "server.rack")
+                                    .foregroundColor(AvionicsTheme.cyan)
+                                Text(currentLanguage == .arabic ? "بنك البيانات الجوية وتليمتري النظام" : "AVIONICS DATA BANK & TELEMETRY")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundColor(AvionicsTheme.cyan)
+                            }
+
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                                statCard(
+                                    value: "74",
+                                    label: currentLanguage == .arabic ? "أجزاء GACAR" : "GACAR Parts",
+                                    detail: currentLanguage == .arabic ? "مفهرسة بالكامل" : "100% Grounded",
+                                    color: AvionicsTheme.cyan
+                                )
+
+                                statCard(
+                                    value: "26",
+                                    label: currentLanguage == .arabic ? "مطارات المملكة" : "KSA Aerodromes",
+                                    detail: currentLanguage == .arabic ? "تحديث METAR حي" : "Live METAR Feeds",
+                                    color: AvionicsTheme.mint
+                                )
+
+                                statCard(
+                                    value: "26",
+                                    label: currentLanguage == .arabic ? "أسئلة اختبار رسمية" : "Official Quiz Bank",
+                                    detail: currentLanguage == .arabic ? "سند مادة مفصل" : "Full GACAR Citations",
+                                    color: AvionicsTheme.amber
+                                )
+
+                                statCard(
+                                    value: "4",
+                                    label: currentLanguage == .arabic ? "حواسب طيران FMC" : "Avionics Tools",
+                                    detail: currentLanguage == .arabic ? "وقود، رياح، كثافة، هبوط" : "Fuel, X-Wind, DA, TOD",
+                                    color: AvionicsTheme.teal
+                                )
+                            }
+                        }
+                        .padding(14)
+                        .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 12, glow: false, tint: 0.6)
 
                         // Model Architecture Card (Hugging Face)
                         VStack(alignment: .leading, spacing: 10) {
@@ -201,6 +244,30 @@ struct AboutView: View {
         }
         .preferredColorScheme(.dark)
         .environment(\.layoutDirection, currentLanguage.isRTL ? .rightToLeft : .leftToRight)
+    }
+
+    private func statCard(value: String, label: String, detail: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(value)
+                .font(.system(size: 22, weight: .black, design: .monospaced))
+                .foregroundColor(color)
+            Text(label)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(AvionicsTheme.ink)
+            Text(detail)
+                .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                .foregroundColor(AvionicsTheme.inkDim)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(AvionicsTheme.panel2.opacity(0.85))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(color.opacity(0.3), lineWidth: 1)
+        )
     }
 
     private func badgePill(_ text: String, icon: String, color: Color) -> some View {

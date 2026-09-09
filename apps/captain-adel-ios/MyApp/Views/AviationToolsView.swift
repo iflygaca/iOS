@@ -2,11 +2,24 @@ import SwiftUI
 
 struct AviationToolsView: View {
     @Binding var currentLanguage: AppLanguage
-    @State private var selectedToolTab: Int = 1 // 0: METAR Weather, 1: Exam Quiz & Flashcards, 2: Fuel & Crosswind
+    @State private var selectedToolTab: Int = 1 // 0: METAR Weather, 1: Exam Quiz & Flashcards, 2: FMC Calculators
     
     // METAR weather state
     @ObservedObject private var metarService = METARService.shared
     @State private var selectedAirportCode: String = "OERK"
+    @State private var airportSearchQuery: String = ""
+
+    private var filteredAirports: [METARReport] {
+        let query = airportSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if query.isEmpty {
+            return metarService.airports
+        }
+        return metarService.airports.filter {
+            $0.icaoCode.lowercased().contains(query) ||
+            $0.airportNameEn.lowercased().contains(query) ||
+            $0.airportNameAr.contains(query)
+        }
+    }
 
     private var selectedAirport: METARReport {
         metarService.airports.first(where: { $0.icaoCode == selectedAirportCode }) ?? metarService.airports[0]
@@ -24,14 +37,25 @@ struct AviationToolsView: View {
     // Flashcard 3D flip state
     @State private var isCardFlipped: Bool = false
     
-    // Calculator state
+    // Calculator 1: VFR Fuel
     @State private var cruiseFuelBurnGPH: String = "10.0"
     @State private var flightTimeHours: String = "2.5"
     @State private var isNightFlight: Bool = false
     
-    @State private var windSpeed: String = "15"
-    @State private var windDirection: String = "310"
-    @State private var runwayHeading: String = "340"
+    // Calculator 2: Crosswind & Runway
+    @State private var windSpeed: String = "18"
+    @State private var windDirection: String = "320"
+    @State private var runwayHeading: String = "350"
+
+    // Calculator 3: Density Altitude & Performance
+    @State private var elevationFt: String = "2047" // King Khalid Int'l (OERK) default
+    @State private var oatCelsius: String = "42"   // Summer desert standard
+    @State private var altimeterInHg: String = "29.85"
+
+    // Calculator 4: Top of Descent (TOD)
+    @State private var cruiseAltitudeFt: String = "36000"
+    @State private var targetAltitudeFt: String = "3000"
+    @State private var descentGroundspeedKts: String = "420"
 
     @Namespace private var modeNamespace
 
@@ -57,7 +81,7 @@ struct AviationToolsView: View {
                         Text(currentLanguage == .arabic ? "أدوات الطيار وتجهيز الاختبارات" : "COCKPIT AVIONICS & EXAM PREP")
                             .font(.system(size: 13, weight: .black, design: .monospaced))
                             .foregroundColor(AvionicsTheme.ink)
-                        Text(currentLanguage == .arabic ? "بيانات حية ومحاكاة عمليات" : "Live METAR, FMC Calculators, GACAR Q&A")
+                        Text(currentLanguage == .arabic ? "بيانات حية ومحاكاة عمليات FMC" : "Live METAR, FMC Calculators, GACAR Q&A")
                             .font(.system(size: 9.5, weight: .medium, design: .monospaced))
                             .foregroundColor(AvionicsTheme.teal)
                     }
@@ -148,11 +172,13 @@ struct AviationToolsView: View {
             // Header with Live NOAA Status & Refresh
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(currentLanguage == .arabic ? "محطات أرصاد الطيران المدني السعودي" : "18 SAUDI CIVIL AERODROMES")
+                    Text(currentLanguage == .arabic ?
+                         "محطات أرصاد المطارات السعودية (\(metarService.airports.count) مطاراً)" :
+                         "\(metarService.airports.count) SAUDI CIVIL AERODROMES")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
                         .foregroundColor(AvionicsTheme.ink)
 
-                    Text(currentLanguage == .arabic ? "بيانات حية من شبكة الأرصاد العالمية" : "Real-time observations from NOAA / GACA")
+                    Text(currentLanguage == .arabic ? "بيانات حية من شبكة الأرصاد العالمية و GACA" : "Real-time observations from NOAA / GACA")
                         .font(.system(size: 9))
                         .foregroundColor(AvionicsTheme.inkDim)
                 }
@@ -188,11 +214,36 @@ struct AviationToolsView: View {
                 }
                 .buttonStyle(.pressable)
             }
+
+            // Quick Airport Search Bar
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(AvionicsTheme.cyan)
+                    .font(.system(size: 12))
+                TextField(
+                    currentLanguage == .arabic ? "بحث برمز ICAO أو اسم المطار (الرياض، جدة، نيوم)..." : "Search ICAO or city (OERK, OEJN, NEOM, Red Sea)...",
+                    text: $airportSearchQuery
+                )
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(AvionicsTheme.ink)
+
+                if !airportSearchQuery.isEmpty {
+                    Button(action: { airportSearchQuery = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(AvionicsTheme.inkDim)
+                            .font(.system(size: 12))
+                    }
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(RoundedRectangle(cornerRadius: 8).fill(AvionicsTheme.panel2))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(AvionicsTheme.line, lineWidth: 1))
             
-            // Airport Selector Chips (All 18 Saudi Aerodromes)
+            // Airport Selector Chips
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(metarService.airports) { airport in
+                    ForEach(filteredAirports) { airport in
                         let isSelected = selectedAirportCode == airport.icaoCode
                         Button(action: {
                             Haptics.selection()
@@ -819,10 +870,10 @@ struct AviationToolsView: View {
                 .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 12, glow: false, tint: 0.6)
             }
 
-            // 2. Crosswind Component Calculator
+            // 2. Crosswind Component & Tactical Runway Visualizer
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("FMC 02 // CROSSWIND COMPONENT")
+                    Text("FMC 02 // CROSSWIND & RUNWAY RESOLUTION")
                         .font(.system(size: 11, weight: .black, design: .monospaced))
                         .foregroundColor(AvionicsTheme.cyan)
                     Spacer()
@@ -831,7 +882,7 @@ struct AviationToolsView: View {
                         .foregroundColor(AvionicsTheme.teal)
                 }
                 
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     HStack {
                         Text(currentLanguage == .arabic ? "سرعة الرياح (عقدة):" : "Wind Speed (kts):")
                             .font(.system(size: 12, design: .monospaced))
@@ -865,11 +916,62 @@ struct AviationToolsView: View {
                             .textFieldStyle(.roundedBorder)
                     }
                     
-                    let ws = Double(windSpeed) ?? 15.0
-                    let wd = Double(windDirection) ?? 310.0
-                    let rwy = Double(runwayHeading) ?? 340.0
+                    let ws = Double(windSpeed) ?? 18.0
+                    let wd = Double(windDirection) ?? 320.0
+                    let rwy = Double(runwayHeading) ?? 350.0
                     let (crosswind, headwind) = METARService.calculateCrosswind(windSpeed: ws, windDirection: wd, runwayHeading: rwy)
+                    let deltaAngle = wd - rwy
+                    let isRightWind = sin(deltaAngle * .pi / 180.0) > 0
                     
+                    // Tactical Compass / Runway Vector Graphic
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .stroke(AvionicsTheme.line, lineWidth: 1.5)
+                                .frame(width: 70, height: 70)
+                            
+                            // Runway Strip
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(AvionicsTheme.inkDim.opacity(0.35))
+                                .frame(width: 14, height: 60)
+                                .overlay(
+                                    Rectangle()
+                                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                                        .foregroundColor(AvionicsTheme.mint)
+                                        .frame(width: 1, height: 50)
+                                )
+                                .rotationEffect(.degrees(rwy))
+                            
+                            // Wind Arrow
+                            Image(systemName: "arrow.down")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(crosswind > 15 ? AvionicsTheme.amber : AvionicsTheme.cyan)
+                                .offset(y: -24)
+                                .rotationEffect(.degrees(wd))
+                        }
+                        .frame(width: 76, height: 76)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(isRightWind ? (currentLanguage == .arabic ? "رياح جانبية من اليمين" : "RIGHT CROSSWIND") :
+                                 (currentLanguage == .arabic ? "رياح جانبية من اليسار" : "LEFT CROSSWIND"))
+                                .font(.system(size: 10, weight: .black, design: .monospaced))
+                                .foregroundColor(crosswind > 20 ? AvionicsTheme.red : (crosswind > 12 ? AvionicsTheme.amber : AvionicsTheme.mint))
+
+                            Text(headwind >= 0 ?
+                                 (currentLanguage == .arabic ? "رياح أمامية مهبطة (Headwind)" : "FAVORABLE HEADWIND") :
+                                 (currentLanguage == .arabic ? "⚠️ رياح خلفية (TAILWIND WARNING)" : "⚠️ UNFAVORABLE TAILWIND"))
+                                .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                                .foregroundColor(headwind >= 0 ? AvionicsTheme.cyan : AvionicsTheme.red)
+
+                            if crosswind > 15 {
+                                Text(currentLanguage == .arabic ? "تنبيه: تتجاوز الحد المعتاد للطائرات الخفيفة" : "Advisory: Exceeds standard light trainer max demo x-wind")
+                                    .font(.system(size: 8.5))
+                                    .foregroundColor(AvionicsTheme.amber)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+
                     Divider().background(AvionicsTheme.line)
                     
                     HStack {
@@ -883,17 +985,207 @@ struct AviationToolsView: View {
                         }
                         Spacer()
                         VStack(alignment: .trailing) {
-                            Text(currentLanguage == .arabic ? "الرياح الأمامية:" : "HEADWIND COMPONENT:")
+                            Text(currentLanguage == .arabic ? "الرياح الأمامية/الخلفية:" : "HEAD/TAIL COMPONENT:")
                                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                                 .foregroundColor(AvionicsTheme.inkDim)
                             Text(String(format: "%.1f KTS", headwind))
                                 .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                .foregroundColor(AvionicsTheme.cyan)
+                                .foregroundColor(headwind >= 0 ? AvionicsTheme.cyan : AvionicsTheme.red)
                         }
                     }
                 }
                 .padding(12)
                 .glassPanel(accent: AvionicsTheme.teal, cornerRadius: 12, glow: false, tint: 0.6)
+            }
+
+            // 3. Density Altitude & High Temp Performance Computer (FMC 03)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("FMC 03 // DENSITY ALTITUDE & HOT WEATHER")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.amber)
+                    Spacer()
+                    Text("ICAO / GACAR PERF")
+                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.teal)
+                }
+
+                VStack(spacing: 8) {
+                    HStack {
+                        Text(currentLanguage == .arabic ? "ارتفاع المطار (قدم MSL):" : "Field Elevation (ft MSL):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        Spacer()
+                        TextField("Elev", text: $elevationFt)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 70)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    HStack {
+                        Text(currentLanguage == .arabic ? "درجة الحرارة الخارجية (°C):" : "Outside Air Temp (°C):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        Spacer()
+                        TextField("OAT", text: $oatCelsius)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 70)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    HStack {
+                        Text(currentLanguage == .arabic ? "مقياس الضغط (inHg):" : "Altimeter Setting (inHg):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        Spacer()
+                        TextField("QNH", text: $altimeterInHg)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 70)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    let elev = Double(elevationFt) ?? 2047.0
+                    let oat = Double(oatCelsius) ?? 42.0
+                    let altim = Double(altimeterInHg) ?? 29.85
+                    
+                    // Pressure Altitude = Elevation + (29.92 - Altimeter) * 1000
+                    let pressureAlt = elev + ((29.92 - altim) * 1000.0)
+                    // Standard ISA Temperature at Elevation = 15 - (2 * Elev/1000)
+                    let isaTemp = 15.0 - (2.0 * (elev / 1000.0))
+                    // Density Altitude = Pressure Alt + [120 * (OAT - ISA)]
+                    let densityAlt = pressureAlt + (120.0 * (oat - isaTemp))
+                    let daDelta = densityAlt - elev
+
+                    Divider().background(AvionicsTheme.line)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(currentLanguage == .arabic ? "ارتفاع الكثافة الفعلي:" : "DENSITY ALTITUDE:")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
+                            Text(String(format: "%.0f FT", densityAlt))
+                                .font(.system(size: 18, weight: .heavy, design: .monospaced))
+                                .foregroundColor(densityAlt > 5000 ? AvionicsTheme.red : (densityAlt > 3000 ? AvionicsTheme.amber : AvionicsTheme.mint))
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(currentLanguage == .arabic ? "فارق الأداء (Δ DA):" : "PERFORMANCE PENALTY:")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
+                            Text(String(format: "+%.0f FT", daDelta))
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.amber)
+                        }
+                    }
+
+                    if daDelta > 2000 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(AvionicsTheme.red)
+                                .font(.system(size: 12))
+                            Text(currentLanguage == .arabic ?
+                                 "تحذير كثافة هواء مرتفعة: توقع مسافة إقلاع أطول ومعدل صعود منخفض بنسبة 35%" :
+                                 "High DA Warning: Significant takeoff roll increase & degraded climb performance (~35%).")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(AvionicsTheme.red)
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+                .padding(12)
+                .glassPanel(accent: AvionicsTheme.amber, cornerRadius: 12, glow: false, tint: 0.6)
+            }
+
+            // 4. Top of Descent (TOD) & 3:1 Glide Slope Computer (FMC 04)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("FMC 04 // TOP OF DESCENT (TOD) 3:1")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.cyan)
+                    Spacer()
+                    Text("3° GLIDEPATH")
+                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                        .foregroundColor(AvionicsTheme.teal)
+                }
+
+                VStack(spacing: 8) {
+                    HStack {
+                        Text(currentLanguage == .arabic ? "ارتفاع العبور (قدم MSL):" : "Cruise Altitude (ft):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        Spacer()
+                        TextField("Cruise", text: $cruiseAltitudeFt)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 70)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    HStack {
+                        Text(currentLanguage == .arabic ? "ارتفاع نقطة البداية (IAF):" : "Target / IAF Altitude (ft):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        Spacer()
+                        TextField("Target", text: $targetAltitudeFt)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 70)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    HStack {
+                        Text(currentLanguage == .arabic ? "السرعة الأرضية للنزول (عقدة):" : "Descent Groundspeed (kts):")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.ink)
+                        Spacer()
+                        TextField("GS", text: $descentGroundspeedKts)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 70)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    let cruise = Double(cruiseAltitudeFt) ?? 36000.0
+                    let target = Double(targetAltitudeFt) ?? 3000.0
+                    let gs = Double(descentGroundspeedKts) ?? 420.0
+                    let altToLose = max(0, cruise - target)
+                    // Standard 3:1 rule: TOD Distance (NM) = (Altitude to Lose / 1000) * 3
+                    let todDistanceNM = (altToLose / 1000.0) * 3.0
+                    // Standard 3-degree Vertical Speed (FPM) = Groundspeed * 5
+                    let requiredVS = gs * 5.0
+                    // Time to reach target in minutes = (TOD Distance / GS) * 60
+                    let timeMinutes = gs > 0 ? (todDistanceNM / gs) * 60.0 : 0.0
+
+                    Divider().background(AvionicsTheme.line)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(currentLanguage == .arabic ? "مسافة بداية النزول (TOD):" : "TOD DISTANCE:")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
+                            Text(String(format: "%.0f NM", todDistanceNM))
+                                .font(.system(size: 18, weight: .heavy, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.cyan)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(currentLanguage == .arabic ? "معدل النزول الرأسي (V/S):" : "REQUIRED V/S (3°):")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.inkDim)
+                            Text(String(format: "-%.0f FPM", requiredVS))
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundColor(AvionicsTheme.mint)
+                        }
+                    }
+
+                    HStack {
+                        Text(currentLanguage == .arabic ?
+                             "الوقت المستغرق للنزول: \(String(format: "%.1f", timeMinutes)) دقيقة | الارتفاع المفقود: \(String(format: "%.0f", altToLose)) قدم" :
+                             "Descent duration: \(String(format: "%.1f", timeMinutes)) mins | Total loss: \(String(format: "%.0f", altToLose)) ft")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundColor(AvionicsTheme.inkDim)
+                        Spacer()
+                    }
+                }
+                .padding(12)
+                .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 12, glow: false, tint: 0.6)
             }
         }
     }
