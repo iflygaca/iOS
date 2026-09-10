@@ -1,6 +1,61 @@
-# iOS
+<div align="center">
 
-The unified native iOS home for the Fly GACA family — **`iflygaca/ios`**.
+# 📱 **Fly GACA iOS**
+### The Unified Native iOS Home for the Fly GACA Family
+#### التطبيقات الأصلية الموحّدة لعائلة فلاي جاكا على الآيفون
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Made%20in-Saudi%20Arabia-006C35?style=for-the-badge&labelColor=0a0e12" alt="صنع في السعودية" />
+  <img src="https://img.shields.io/badge/Bilingual-EN%20%E2%87%84%20AR-C8A04A?style=for-the-badge&labelColor=0a0e12" alt="Bilingual EN/AR" />
+  <img src="https://img.shields.io/badge/STATUS-MERGED%20HOME-00ff88?style=for-the-badge&labelColor=0a0e12" alt="Status: Merged Home" />
+  <img src="https://img.shields.io/badge/Swift-5.9%2B-F05138?style=for-the-badge&logo=swift&logoColor=white&labelColor=0a0e12" alt="Swift 5.9+" />
+  <img src="https://img.shields.io/badge/SwiftUI-iOS%2017%2B-0D96F6?style=for-the-badge&labelColor=0a0e12" alt="SwiftUI iOS 17+" />
+  <img src="https://img.shields.io/badge/Offline-100%25%20Capable-8E75B2?style=for-the-badge&labelColor=0a0e12" alt="100% Offline" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge&labelColor=0a0e12" alt="License MIT" />
+</p>
+
+</div>
+
+---
+
+## 🏗 Fly GACA Family
+
+[📚 FlyGACA Web & API](https://github.com/iflygaca/FlyGACA) • 
+[🤖 Captain Adel AI](https://github.com/iflygaca/Captain-Adel) • 
+[📱 Unified iOS Apps (this repo)](https://github.com/iflygaca/ios) • 
+[🏢 Office & Governance](https://github.com/iflygaca/Office)
+
+---
+
+> [!IMPORTANT]
+> **Independent Educational Platform.** Fly GACA is an independent educational platform, not
+> affiliated with, endorsed by, or operated by GACA or the Government of Saudi Arabia. GACA
+> ([gaca.gov.sa](https://gaca.gov.sa)) is always the authoritative source; both apps in this repo
+> cite it and defer to it.
+>
+> **منصة تعليمية مستقلة.** فلاي جاكا منصة تعليمية مستقلة، غير تابعة للهيئة العامة للطيران المدني
+> (GACA) ولا معتمدة منها ولا للحكومة السعودية. الهيئة ([gaca.gov.sa](https://gaca.gov.sa)) هي
+> دائمًا المصدر الرسمي؛ وكلا التطبيقين في هذا المستودع يستشهدان بها ويلتزمان بمرجعيتها.
+
+---
+
+## 🇸🇦 عن هذا المستودع (بالعربية)
+
+هذا المستودع هو **الموطن الأصلي الموحّد** لتطبيقات فلاي جاكا على الآيفون. يضم التاريخ الكامل
+لمستودعين كانا منفصلين، وكل منهما محفوظ كشجرة مستقلة تحت `apps/`:
+
+- **فلاي جاكا للآيفون** (`apps/flygaca-ios/`) — حزمة `FlyGACAKit` وتطبيقا الدراسة **ELPT** و
+  **AIP**: تحضير للاختبارات، بطاقات تعليمية، تكرار متباعد، واختبارات محاكاة.
+- **كابتن عادل للآيفون** (`apps/captain-adel-ios/`) — تطبيق "كابتن عادل" المستقل، رفيق تنظيمي
+  لقمرة القيادة يعمل بلا اتصال بالإنترنت، مع بحث نصي على الجهاز واتصال صوتي ثنائي اللغة وطقس حي.
+
+هذا الدمج **خطوة أولى نحو رؤية تطبيق واحد موحّد** يجمع الدراسة والحاسبات ومدرّب الذكاء الاصطناعي
+واللوائح التنظيمية في مكان واحد. كل تطبيق لا يزال يُبنى ويُنشر بشكل مستقل تمامًا كما كان في
+مستودعه الخاص — هذا دمج جنبًا إلى جنب وليس تكاملًا معماريًا عميقًا بعد.
+
+---
+
+## 🎯 What's this?
 
 This repo merges the full git history of two previously separate repositories, each kept
 as its own top-level app under `apps/`:
@@ -16,6 +71,26 @@ Merged 2026-09-08 from [`iflygaca/FlyGACA-ios`](https://github.com/iflygaca/FlyG
 untouched. **Both source repos remain on GitHub**, each carrying a notice pointing here; they are
 not deleted or archived (this session has no ability to archive a GitHub repo), and their own
 CI/CD and TestFlight pipelines keep running unchanged in place until a human decides otherwise.
+
+---
+
+## 🏛 Repository Architecture
+
+```
+iflygaca/ios
+│
+├─ apps/flygaca-ios/            (FlyGACAKit family — ELPT, AIP)
+│   └─ apple/FlyGACAKit/
+│       CoreModels → StudyEngines / ContentKit / AppServices / PersistenceKit
+│                  → PlatformLive → FeatureUI
+│
+└─ apps/captain-adel-ios/       (Captain Adel — offline GACAR co-pilot)
+    └─ MyApp/
+        On-device TF-IDF vector search · Bilingual voice comms · METAR/TAF weather
+```
+
+Both trees build, test, and ship independently today via their own scoped GitHub Actions
+workflows — see [CI](#-ci) below.
 
 ## Why merge
 
@@ -33,6 +108,24 @@ voice, METAR, and on-device RAG engine are not yet ported into `FlyGACAKit`'s `P
 different offline-corpus strategies) tracked as follow-up in
 [`apps/README.md`](apps/README.md#follow-up-deep-integration). Each app builds and ships
 independently today, exactly as it did in its own repo.
+
+---
+
+## 🖼️ Visuals
+
+<div align="center">
+
+| FlyGACA — Study Mode | FlyGACA — Flashcards | Captain Adel — Cockpit Chat |
+|:---:|:---:|:---:|
+| ![Study mode screenshot placeholder](https://placehold.co/260x560/0a0e12/0D96F6?text=Study+Mode) | ![Flashcards screenshot placeholder](https://placehold.co/260x560/0a0e12/00ff88?text=SRS+Flashcards) | ![Captain Adel chat screenshot placeholder](https://placehold.co/260x560/050810/22d3ee?text=Cockpit+Chat) |
+
+*Screenshots are placeholders pending a unified capture pass — each app's own screenshot pipeline
+is documented under its `apps/<app>/` tree (`apple/Scripts/html-render/` for FlyGACA iOS,
+`scripts/archive_testflight.sh`-adjacent tooling for Captain Adel iOS).*
+
+</div>
+
+---
 
 ## Building
 
@@ -66,8 +159,38 @@ Root `.github/workflows/` carries three workflows, each scoped to its app via
   `captain-adel-v*.*.*` tags (renamed from the bare `v*.*.*` scheme it used as a standalone repo,
   to avoid colliding with `flygaca-ios`'s own release tags in this shared repo).
 
+---
+
+## 🧑‍💻 Contributing
+
+We welcome pilots, iOS engineers, designers, and aviation enthusiasts.
+
+1. **Fork** this repo
+2. **Create** a feature branch under the app you're changing (`apps/flygaca-ios/` or
+   `apps/captain-adel-ios/`)
+3. **Test** thoroughly with that app's own commands (see [Building](#building) above)
+4. **Push** and open a **Pull Request**
+
+## 📜 License
+
+MIT © BDA Company International, operating as Fly GACA
+
+---
+
 ## Disclaimer
 
 Fly GACA is an independent educational platform, not affiliated with, endorsed by, or operated
 by GACA or the Government of Saudi Arabia. GACA (gaca.gov.sa) is always the authoritative
 source; both apps in this repo cite it and defer to it.
+
+---
+
+<div align="center">
+
+**Study offline. Fly prepared. Master the regulations.**
+
+[Report Issues](https://github.com/iflygaca/ios/issues) · [Star ⭐](https://github.com/iflygaca/ios)
+
+🇸🇦 صنع في السعودية · Made in Saudi Arabia
+
+</div>
