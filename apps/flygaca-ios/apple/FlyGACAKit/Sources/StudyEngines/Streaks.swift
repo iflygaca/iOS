@@ -20,8 +20,8 @@ public enum Streaks {
     /// Advance a streak for a study event now — port of the web's `nextStreak`:
     /// same day = unchanged, consecutive day = +1, gap = reset to 1.
     public static func next(_ previous: Streak, now: Date) -> Streak {
-        let today = Leitner.day(now)
-        let yesterday = Leitner.day(now.addingTimeInterval(-86_400))
+        let today = SRS.day(now)
+        let yesterday = SRS.day(now.addingTimeInterval(-86_400))
         if previous.day == today { return previous }
         if previous.day == yesterday { return Streak(day: today, count: previous.count + 1) }
         return Streak(day: today, count: 1)

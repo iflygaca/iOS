@@ -43,7 +43,7 @@ Apple reviews apps on actual hardware to verify they work as advertised without 
 
 2. **[ELPT: Standalone Module](videos/elpt-demo-quiz-flashcards.mp4)** (2m 30s)
    - Shows: ELPT app launch → module home → quiz bank selection → 5 question quiz → flashcard review → results
-   - Demonstrates: Module isolation, quiz flow, Leitner progression tracking
+   - Demonstrates: Module isolation, quiz flow, spaced-repetition progression tracking
 
 3. **[AIP: Regulations + Calculator](videos/aip-demo-regulations-search.mp4)** (2m 30s)
    - Shows: AIP app launch → regulations search (Part 61) → GACAR text display → flight calculator (crosswind) → bilingual toggle
@@ -75,7 +75,7 @@ FlyGACA is an independent educational platform and Electronic Flight Bag (EFB) f
 
 **Full Description:**
 FlyGACA provides comprehensive offline access to:
-- 1,000+ practice questions (quizzing + spaced-repetition flashcards using Leitner SRS algorithm)
+- 1,000+ practice questions (quizzing + spaced-repetition flashcards using the FSRS algorithm)
 - 74 GACA (General Authority of Civil Aviation) regulations searchable with citations
 - 55+ flight deck calculators (crosswind, density altitude, weight & balance, fuel burn, true airspeed, etc.)
 - Timed mock exams with automatic scoring and analytics
@@ -115,9 +115,9 @@ FlyGACA provides comprehensive offline access to:
 |---------|-----------------|
 | GACAR regulations scattered across dozens of PDFs on gaca.gov.sa | Centralized, searchable, offline-accessible 74 GACA parts |
 | No structured study path for pilot certification | Ground school with lesson sequences, progress tracking, streaks |
-| Limited practice questions (textbooks + papers only) | 1,000+ questions in quiz mode + flashcards with Leitner SRS |
+| Limited practice questions (textbooks + papers only) | 1,000+ questions in quiz mode + flashcards with FSRS spaced repetition |
 | No lightweight calculator tools during flight planning | 55+ tools bundled offline (crosswind, altitude, weight & balance, fuel, etc.) |
-| Manual flashcard creation and tracking | Automated Leitner spaced-repetition system (boxes 0-5, intervals 0/1/3/7/14/30 days) |
+| Manual flashcard creation and tracking | Automated FSRS spaced-repetition system (per-card stability and difficulty set each interval) |
 | Exam anxiety from untimed study | Timed mock exams matching real GACA scoring (25 Qs, 30 min, 75% pass mark by default) |
 | Studying only in English (foreign pilots) | Bilingual interface: English + Arabic with RTL support |
 | Unreliable internet in remote/flight areas | 100% offline operation—all core features work without internet |

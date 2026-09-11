@@ -37,10 +37,19 @@ public final class ExamAttemptRecord {
     }
 }
 
-/// One flashcard's Leitner state. Dual-keyed on purpose:
+/// One flashcard's spaced-repetition state. Dual-keyed on purpose:
 ///  - `key` = "bankID|cardKey" (web index-string keying — progress parity), and
 ///  - `questionID` = the stable content hash, so when a refreshed corpus shifts
 ///    indices the row is reconciled by hash instead of being orphaned.
+///
+/// The FSRS columns (`stability` … `lapses`) are **optional so this stays a
+/// lightweight migration**: SwiftData can add a nullable attribute to an existing
+/// store with no migration plan, and a row written before FSRS simply reads back
+/// with nil. `SRS.migrate` then seeds it from `box`, preserving `dueDay`, so an
+/// existing learner's schedule does not move when they take the update. Making
+/// these non-optional with defaults would instead require a `VersionedSchema` +
+/// `SchemaMigrationPlan`, which is the cost the flat-model rule above exists to
+/// avoid.
 @Model
 public final class CardSRSRecord {
     @Attribute(.unique) public var key: String
@@ -48,17 +57,44 @@ public final class CardSRSRecord {
     /// The web card key — question index as a string.
     public var cardKey: String
     public var questionID: String
+    /// Derived display bucket 0…5 — presentation only, never an input to
+    /// scheduling. `stability` is what decides the next interval.
     public var box: Int
     /// UTC "yyyy-mm-dd" (string compare = due check; web parity).
     public var dueDay: String
+    /// FSRS stability in days. nil on rows written before FSRS landed.
+    public var stability: Double?
+    /// FSRS difficulty 1…10. nil on rows written before FSRS landed.
+    public var difficulty: Double?
+    /// UTC "yyyy-mm-dd" of the last review — elapsed days feed retrievability.
+    public var lastDay: String?
+    public var reps: Int?
+    public var lapses: Int?
 
-    public init(key: String, bankID: String, cardKey: String, questionID: String, box: Int, dueDay: String) {
+    public init(
+        key: String,
+        bankID: String,
+        cardKey: String,
+        questionID: String,
+        box: Int,
+        dueDay: String,
+        stability: Double? = nil,
+        difficulty: Double? = nil,
+        lastDay: String? = nil,
+        reps: Int? = nil,
+        lapses: Int? = nil
+    ) {
         self.key = key
         self.bankID = bankID
         self.cardKey = cardKey
         self.questionID = questionID
         self.box = box
         self.dueDay = dueDay
+        self.stability = stability
+        self.difficulty = difficulty
+        self.lastDay = lastDay
+        self.reps = reps
+        self.lapses = lapses
     }
 }
 

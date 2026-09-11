@@ -71,7 +71,9 @@ Fly GACA for iOS is a **native flight study and calculator app** built with Swif
 Study GACAR, quiz banks, flashcards—all on device. Perfect for the flight bag.
 
 ### **🎓 Spaced Repetition (SRS)**
-Leitner-based flashcard system. Boxes 0–5, intervals of 1–30 days. Web-parity algorithms.
+FSRS-6 flashcard scheduling: each card tracks its own stability and difficulty, so intervals
+adapt per learner instead of following a fixed ladder. The 0–5 box remains as a display
+bucket. Web-parity algorithms.
 
 ### **🧮 Flight Calculators**
 - Crosswind & runway components
@@ -172,8 +174,8 @@ npm run ios:test
 
 ### Parity Vectors
 Study algorithms (SRS) are mathematically verified against web test vectors:
-- Leitner box progression
-- Spaced repetition intervals
+- FSRS stability and difficulty after each rating
+- Spaced repetition intervals and the derived display box
 - Streak calculation
 - Exam scoring
 

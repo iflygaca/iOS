@@ -124,9 +124,18 @@ Rules that keep this healthy — do not violate them:
 
 These semantics are shared with the web app (`ay2m/FlyGACA`); users move between platforms:
 
-- **SRS** = a literal port of `src/calc/study/srs.ts`: boxes 0–5, intervals
-  `[0, 1, 3, 7, 14, 30]` days, correct promotes (capped), wrong resets to 0, unseen always
-  due, mastered = box ≥ 3. Parity vectors: `apple/FlyGACAKit/Tests/StudyEnginesTests/LeitnerTests.swift`.
+- **SRS is FSRS-6, not Leitner** (changed 2026-09). A literal port of
+  `src/calc/study/fsrs.ts` + `srs.ts`: each card carries stability `s` (days until recall
+  decays to 90 %) and difficulty `d` (1–10), and the next interval is
+  `round(idealInterval(s))` clamped to `[1, 36500]` days. The old `[0, 1, 3, 7, 14, 30]`
+  ladder survives ONLY as a derived display bucket (`box = boxForStability(s)`), so the
+  mastery rule is unchanged: box ≥ 3 ⇔ stability ≥ 7 days. Unseen cards are always due, and
+  a wrong answer still stays due today (a day-granular stand-in for FSRS relearning steps —
+  it keeps the "got it wrong, see it again now" drill loop). Pre-FSRS entries carry only
+  `box`/`due` and are migrated lazily by `SRS.migrate`, which seeds `s` from the box and
+  **preserves `due` byte-for-byte** so no learner's schedule moves. Neither platform takes an
+  FSRS dependency; both are ports cross-checked against shared frozen vectors in
+  `apple/FlyGACAKit/Tests/StudyEnginesTests/SRSTests.swift` and the web's `tests/srs.test.ts`.
 - **Due dates are UTC day-strings** (`yyyy-mm-dd`, string compare) — a `Calendar.current`
   port would drift a day near midnight.
 - **Exam scoring**: `percent = round(correct/total × 100)`, `passed = percent ≥ passMark`
@@ -367,7 +376,7 @@ These are one-time human/console setup, not something to script from first princ
   numbers phases differently from `ARCHITECTURE.md` §5: its "Phase 4 ✅" is the signing/TestFlight
   slice, **not** PlatformLive.
 - **Tests span 5 targets / 11 files** — `CoreModelsTests` (ModuleManifest, QuizDecode),
-  `StudyEnginesTests` (Leitner, Readiness, Sampler, Session, Streak), `ContentKitTests`
+  `StudyEnginesTests` (SRS/FSRS, Readiness, Sampler, Session, Streak), `ContentKitTests`
   (ContentLoader, ContentRefresher), `PersistenceKitTests` (StudyStore) and
   `PlatformLiveTests` — not just the SRS parity vectors.
   (ContentLoader, ContentRefresher), `PersistenceKitTests` (StudyStore) and `PlatformLiveTests`
