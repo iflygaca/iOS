@@ -96,7 +96,7 @@ jobs:
           bundle exec fastlane beta build_number:"$BUILD_NUM" changelog:"$CHANGELOG"
 
       - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: CaptainAdel-TestFlight-IPA
