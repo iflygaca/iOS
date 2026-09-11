@@ -32,7 +32,7 @@ The Fly GACA family maintains strong unit test coverage across all three reposit
 **Well-Tested Areas:**
 - ✅ Calculation modules (`src/calc/`) — 100% coverage on flight tools (crosswind, TAS, ISA, runway, recency)
 - ✅ Study state management (`src/lib/studyProgress.ts`) — parity vectors with iOS/web
-- ✅ SRS/Leitner engine (`src/calc/study/srs.ts`) — parity-critical tests
+- ✅ SRS/FSRS engine (`src/calc/study/fsrs.ts` + `srs.ts`) — parity-critical tests
 - ✅ Data transformations — 130+ tests covering hooks, utilities, services
 - ✅ Form validation — auth flows, password policy, referrals
 - ✅ Offline behavior — cache hydration, PWA manifest generation
@@ -181,13 +181,13 @@ The Fly GACA family maintains strong unit test coverage across all three reposit
 
 **Test Targets (5):**
 - ✅ `CoreModelsTests` — ModuleManifest, QuizDecode, Aviation models
-- ✅ `StudyEnginesTests` — Leitner (SRS), Sessions, Streak, Sampler, Readiness
+- ✅ `StudyEnginesTests` — SRS/FSRS, Sessions, Streak, Sampler, Readiness
 - ✅ `ContentKitTests` — Content loading, signed corpus refresh
 - ✅ `PersistenceKitTests` — SwiftData store operations
 - ✅ `PlatformLiveTests` — Live service implementations (Firebase, Moyasar, Captain Adel)
 
 **Well-Tested (Critical Parity):**
-- ✅ SRS/Leitner engine — byte-for-byte parity with `src/calc/study/srs.ts` via hand-computed vectors
+- ✅ SRS/FSRS engine — parity with `src/calc/study/fsrs.ts` + `srs.ts` via frozen differential vectors
 - ✅ Study session state machine — fixed-date testing, no time dependencies
 - ✅ Content manifest parsing — module JSON schema validation
 - ✅ Signed corpus refresh — Ed25519 signature verification
@@ -312,7 +312,7 @@ The Fly GACA family maintains strong unit test coverage across all three reposit
 
 | Contract | Verification | Gap | Risk |
 |----------|---------------|-----|------|
-| **SRS/Leitner** | Hand-computed vectors (Leitner iOS, study-progress web) | Drift possible if web changes without iOS follow-up | High |
+| **SRS/FSRS** | Frozen vectors differentially checked web ↔ iOS | Drift possible if web changes without iOS follow-up | High |
 | **Pricing & Bands** | Server `prices.ts` vs. client pricing views | No automated sync test | Medium |
 | **Family contract** | `contracts/flygaca-family.json` byte parity across three repos | CI gates it; no nightly re-verification | Low-Med |
 | **Entitlements model** | Server-authored; iOS/web consume via API | No test that models match | Medium |
@@ -326,7 +326,7 @@ The Fly GACA family maintains strong unit test coverage across all three reposit
    - **Effort:** 1 sprint
 
 2. **SRS regression matrix**:
-   - Extend `LeitnerTests.swift` to include probabilistic tests (random box transitions, various now dates)
+   - Extend `SRSTests.swift` to include probabilistic tests (random rating sequences, various now dates)
    - Add `tests/study-srs-parity.test.ts` to web
    - **Effort:** 1 sprint
 

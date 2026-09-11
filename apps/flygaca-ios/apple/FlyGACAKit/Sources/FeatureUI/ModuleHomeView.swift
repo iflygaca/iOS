@@ -132,7 +132,7 @@ struct ModuleHomeView: View {
                                 icon: "rectangle.on.rectangle.angled",
                                 iconColor: FGTheme.sage,
                                 title: bank.title,
-                                subtitle: "Leitner SRS deck · \(bank.questions.count) cards"
+                                subtitle: "Spaced-repetition deck · \(bank.questions.count) cards"
                             )
                         }
                     }
@@ -392,7 +392,7 @@ struct ExamScreen: View {
 }
 
 /// Flip-card runner over one bank. Grading updates a local snapshot for the
-/// instant "Deck complete" mastery count AND persists the durable Leitner
+/// instant "Deck complete" mastery count AND persists the durable SRS
 /// schedule + streak through StudyStore (family-wide, survives relaunch).
 struct FlashcardsScreen: View {
     let bank: Bank
@@ -422,7 +422,7 @@ struct FlashcardsScreen: View {
                     Label(Loc.t("flashcards.deckComplete"), systemImage: "checkmark.seal.fill")
                         .foregroundStyle(FGTheme.sage)
                 } description: {
-                    Text(Loc.t("flashcards.cardsOnTrack", Leitner.masteredCount(in: srs)))
+                    Text(Loc.t("flashcards.cardsOnTrack", SRS.masteredCount(in: srs)))
                         .foregroundStyle(.white)
                 }
             }
@@ -444,13 +444,13 @@ struct FlashcardsScreen: View {
         // yet) still surfaces every card — this only narrows the deck once SRS
         // history exists.
         let due = Set(
-            Leitner.dueKeys(in: srs, allKeys: bank.questions.map(\.legacyKey), now: Date()))
+            SRS.dueKeys(in: srs, allKeys: bank.questions.map(\.legacyKey), now: Date()))
         deck = bank.questions.filter { due.contains($0.legacyKey) }
     }
 
     private func grade(question: Question, correct: Bool) {
         // Instant local feedback for the mastery count, even if persistence is off.
-        srs[question.legacyKey] = Leitner.schedule(
+        srs[question.legacyKey] = SRS.schedule(
             srs[question.legacyKey], correct: correct, now: Date())
         index += 1
         guard let store else { return }

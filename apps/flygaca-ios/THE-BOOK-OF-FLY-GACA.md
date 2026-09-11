@@ -165,7 +165,7 @@ platforms diverge:
 
 | Contract | The law | Canonical source |
 | --- | --- | --- |
-| **SRS (Leitner)** | boxes 0–5; intervals `[0, 1, 3, 7, 14, 30]` days; correct promotes (capped), wrong resets to 0; unseen always due; mastered = box ≥ 3 | monorepo `src/calc/study/srs.ts`; vectors in `apple/FlyGACAKit/Tests/StudyEnginesTests/LeitnerTests.swift` |
+| **SRS (FSRS-6 since 2026-09)** | per-card stability `s` + difficulty `d` set the interval (`round(idealInterval(s))`, clamped `[1, 36500]` days); the old `[0, 1, 3, 7, 14, 30]` ladder is now only a derived display box, so mastered is still box ≥ 3 ⇔ `s` ≥ 7 days; unseen always due; a wrong answer stays due today | monorepo `src/calc/study/fsrs.ts` + `srs.ts`; vectors in `apple/FlyGACAKit/Tests/StudyEnginesTests/SRSTests.swift` and the web's `tests/srs.test.ts` |
 | **Due dates** | UTC day-strings (`yyyy-mm-dd`, string compare) — a `Calendar.current` port would drift a day near midnight | same pair |
 | **Exam scoring** | `percent = round(correct/total × 100)`; `passed = percent ≥ passMark`; defaults 25 q / 30 min / 75 %; per-pack overrides; auto-submit at 0:00; unanswered counts wrong | web mock exam ↔ `StudyEngines` |
 | **Streak** | same day unchanged; consecutive day +1; gap resets | web `nextStreak` ↔ `Streaks` |
@@ -266,7 +266,9 @@ live in each repo's `CLAUDE.md`.*
 - **Wave** — the shipping cohorts of the app family. Wave 1 was PPL/ELPT/AIP and Wave 2
   CPL/IR/ATPL; with the licence modules paused the live cohort is ELPT/AIP, and the wave
   labels are now history rather than a plan.
-- **Leitner / SRS** — the spaced-repetition system (Book IV); "mastered" means box ≥ 3.
+- **SRS / FSRS** — the spaced-repetition system (Book IV). FSRS-6 schedules the cards;
+  "mastered" still means box ≥ 3, which now reads as stability ≥ 7 days. "Leitner" in older
+  documents refers to the fixed 0–5 ladder this replaced in 2026-09.
 - **App Group** — `group.com.FlyGACA`: the shared on-device container that makes the
   family feel like one product.
 - **PlatformLive** — the not-yet-built iOS target where Firebase/RevenueCat will live;

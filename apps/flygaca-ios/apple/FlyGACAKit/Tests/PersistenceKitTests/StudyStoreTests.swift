@@ -1,5 +1,6 @@
 import CoreModels
 import StudyEngines
+import SwiftData
 import XCTest
 
 @testable import PersistenceKit
@@ -91,11 +92,89 @@ final class StudyStoreTests: XCTestCase {
         let epoch = Date(timeIntervalSince1970: 0)
 
         let entry = try await store.grade(question: question, correct: true, now: epoch)
-        // Fresh card graded correct promotes box 0 → 1 (web Leitner parity).
+        // A fresh card graded correct is FSRS Good: stability 2.3065 days, which
+        // buckets into display box 1 (web parity — see SRSTests).
         XCTAssertEqual(entry.box, 1)
+        XCTAssertEqual(entry.s!, 2.3065, accuracy: 1e-10)
 
         let entries = try await store.srsEntries(bankID: "bank-a")
         XCTAssertEqual(entries[question.legacyKey], entry)
+    }
+
+    /// The FSRS columns on `CardSRSRecord` are new and optional; this is the test
+    /// that fails if they are not actually written and read back. Without the
+    /// round trip, every review would re-seed from `box` and stability could never
+    /// grow past the old ladder's 30 days.
+    func testFSRSStatePersistsAcrossGrades() async throws {
+        let store = try makeStore()
+        let question = makeQuestion(bankID: "bank-a", index: 0, id: "q-1")
+        let day0 = Date(timeIntervalSince1970: 1_781_946_000)  // 2026-06-20T09:00:00Z
+
+        let first = try await store.grade(question: question, correct: true, now: day0)
+        XCTAssertEqual(first.reps, 1)
+        XCTAssertEqual(first.due, "2026-06-22")
+
+        // Reviewed on time, three days later. Had the stability not round-tripped,
+        // this would recompute from box 1 (a 1-day seed) instead of from 2.3065.
+        let second = try await store.grade(
+            question: question, correct: true, now: day0.addingTimeInterval(2 * 86_400))
+        XCTAssertEqual(second.reps, 2, "reps accumulate, so the row carried its history")
+        XCTAssertEqual(second.s!, 10.964332, accuracy: 1e-5)
+        XCTAssertEqual(second.last, "2026-06-22")
+        XCTAssertEqual(second.lapses, 0)
+
+        let reread = try await store.srsEntries(bankID: "bank-a")[question.legacyKey]
+        XCTAssertEqual(reread, second, "every FSRS field survives the SwiftData round trip")
+    }
+
+    /// A row written before FSRS has nil stability. Reading it must seed from the
+    /// box WITHOUT moving `due` — a learner must not come back to a changed
+    /// schedule or a pile of newly-due cards.
+    ///
+    /// The legacy row is seeded through a plain `ModelContext` rather than a
+    /// `StudyStore` call, because omitting the FSRS arguments is precisely what a
+    /// pre-FSRS build did: the optional columns land as nil, which is the state
+    /// lightweight migration leaves behind on a real device.
+    func testPreFSRSRowIsMigratedOnReadWithoutMovingItsDueDate() async throws {
+        let container = try Persistence.container(inMemory: true)
+        let seeding = ModelContext(container)
+        seeding.insert(
+            CardSRSRecord(
+                key: "bank-a|0", bankID: "bank-a", cardKey: "0", questionID: "q-1",
+                box: 4, dueDay: "2026-07-01"))
+        try seeding.save()
+
+        let store = StudyStore(container: container)
+        let entry = try await store.srsEntries(bankID: "bank-a")["0"]
+        let unwrapped = try XCTUnwrap(entry)
+        XCTAssertEqual(unwrapped.due, "2026-07-01", "the stored schedule must not move")
+        XCTAssertEqual(unwrapped.box, 4)
+        XCTAssertEqual(try XCTUnwrap(unwrapped.s), 14, "box 4 survived 14 days, so seed 14 days")
+        XCTAssertEqual(unwrapped.last, "2026-06-17", "last = due minus the box interval")
+        XCTAssertEqual(unwrapped.reps, 4)
+    }
+
+    /// And grading that migrated row must schedule from the seeded 14 days, not
+    /// from scratch — the seed is worthless if the first review discards it.
+    func testGradingAPreFSRSRowSchedulesFromItsSeededStability() async throws {
+        let container = try Persistence.container(inMemory: true)
+        let seeding = ModelContext(container)
+        seeding.insert(
+            CardSRSRecord(
+                key: "bank-a|0", bankID: "bank-a", cardKey: "0", questionID: "q-1",
+                box: 5, dueDay: "2026-06-20"))
+        try seeding.save()
+
+        let store = StudyStore(container: container)
+        let graded = try await store.grade(
+            question: makeQuestion(bankID: "bank-a", index: 0, id: "q-1"),
+            correct: true,
+            now: Date(timeIntervalSince1970: 1_781_946_000))  // 2026-06-20T09:00:00Z
+        // 30 days of seeded stability + one on-time correct review. Matches the
+        // web's "schedules a migrated card without losing its history" vector.
+        XCTAssertEqual(try XCTUnwrap(graded.s), 111.458668, accuracy: 1e-5)
+        XCTAssertEqual(graded.reps, 6, "reps carried the box across as review count")
+        XCTAssertEqual(graded.box, 5)
     }
 
     func testGradeWrongResetsBoxToZero() async throws {

@@ -71,14 +71,18 @@ public actor StudyStore {
     // ── Flashcards / SRS ──
 
     /// Grade a card and persist its new schedule; returns the new entry.
+    ///
+    /// `SRS.schedule` migrates a pre-FSRS row (stability nil) on the way through,
+    /// seeding it from `box` while keeping `dueDay` — so a learner who had cards
+    /// scheduled under the old ladder keeps exactly the schedule they had, and the
+    /// FSRS state starts accumulating from this review forward.
     public func grade(question: Question, correct: Bool, now: Date = Date()) throws -> SrsEntry {
         let key = "\(question.bankID)|\(question.legacyKey)"
         let record = try fetchCard(key: key)
-        let previous = record.map { SrsEntry(box: $0.box, due: $0.dueDay) }
-        let entry = Leitner.schedule(previous, correct: correct, now: now)
+        let previous = record.map { Self.entry(from: $0) }
+        let entry = SRS.schedule(previous, correct: correct, now: now)
         if let record {
-            record.box = entry.box
-            record.dueDay = entry.due
+            Self.apply(entry, to: record)
             record.questionID = question.id
         } else {
             modelContext.insert(
@@ -88,7 +92,12 @@ public actor StudyStore {
                     cardKey: question.legacyKey,
                     questionID: question.id,
                     box: entry.box,
-                    dueDay: entry.due
+                    dueDay: entry.due,
+                    stability: entry.s,
+                    difficulty: entry.d,
+                    lastDay: entry.last,
+                    reps: entry.reps,
+                    lapses: entry.lapses
                 ))
         }
         try modelContext.save()
@@ -96,12 +105,41 @@ public actor StudyStore {
     }
 
     /// All SRS entries for a bank, keyed by web card key (index string).
+    ///
+    /// Pre-FSRS rows are migrated in the returned value but NOT written back: the
+    /// seed is pure and idempotent, so recomputing it on each read is free, and a
+    /// read path that silently writes would make every deck open a store mutation.
+    /// The row is upgraded for real on its next `grade`.
     public func srsEntries(bankID: String) throws -> [String: SrsEntry] {
         let descriptor = FetchDescriptor<CardSRSRecord>(
             predicate: #Predicate { $0.bankID == bankID })
         let records = try modelContext.fetch(descriptor)
         return Dictionary(
-            uniqueKeysWithValues: records.map { ($0.cardKey, SrsEntry(box: $0.box, due: $0.dueDay)) })
+            uniqueKeysWithValues: records.map { ($0.cardKey, SRS.migrate(Self.entry(from: $0))) })
+    }
+
+    /// Row → engine value. The only place the column names are spelled out.
+    private static func entry(from record: CardSRSRecord) -> SrsEntry {
+        SrsEntry(
+            box: record.box,
+            due: record.dueDay,
+            s: record.stability,
+            d: record.difficulty,
+            last: record.lastDay,
+            reps: record.reps,
+            lapses: record.lapses
+        )
+    }
+
+    /// Engine value → row, in place.
+    private static func apply(_ entry: SrsEntry, to record: CardSRSRecord) {
+        record.box = entry.box
+        record.dueDay = entry.due
+        record.stability = entry.s
+        record.difficulty = entry.d
+        record.lastDay = entry.last
+        record.reps = entry.reps
+        record.lapses = entry.lapses
     }
 
     private func fetchCard(key: String) throws -> CardSRSRecord? {
@@ -202,7 +240,7 @@ public actor StudyStore {
 
     /// After `ContentRefresher` pulls a newer corpus slice, a bank's question
     /// order can shift. Rewrite each row's `cardKey`/`key` to the question's new
-    /// position, matched by the stable content hash (`questionID`) — so Leitner
+    /// position, matched by the stable content hash (`questionID`) — so SRS
     /// progress survives reordering instead of silently regrading the wrong
     /// question. Rows whose question no longer exists in the refreshed bank are
     /// left untouched (orphaned, not deleted — the corpus edit may be reverted).

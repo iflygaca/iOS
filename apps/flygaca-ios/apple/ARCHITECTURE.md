@@ -3,7 +3,7 @@
 The native SwiftUI products: **one unified flagship app (`FlyGACA`) containing all features**, plus optional standalone module targets (ELPT and AIP).
 
 Every app carries the identical high-precision flight deck suite:
-- **Academics**: Study mode, Quizzing by topic, Flashcards (Spaced Repetition with Leitner 5-box algorithm), timed scored Exam Prep with analytics, Ground School lessons, and ICAO Scenario check-ride simulators.
+- **Academics**: Study mode, Quizzing by topic, Flashcards (Spaced Repetition with the FSRS-6 memory model), timed scored Exam Prep with analytics, Ground School lessons, and ICAO Scenario check-ride simulators.
 - **Flight Deck Tools**: Offline calculators (Crosswind vector visualizer, Pressure & Density Altitude, Weight & Balance CG envelope, Fuel & Range planner, Time/Speed/Distance wind triangle, Unit Converter) and Saudi METAR / TAF weather decoder.
 - **Captain Adel AI**: Streaming AI flight instructor with GACAR citations and audio speech playback.
 - **GACAR Regulations Library**: Offline searchable regulatory library covering all GACAR parts.
@@ -42,7 +42,7 @@ Every app carries the identical high-precision flight deck suite:
 | Target | Responsibility | External deps |
 |---|---|---|
 | **CoreModels** | `Question`, `Bank`, `QuizFile`, `ModuleManifest`, `ExamConfig`, `SrsEntry`, ground-school/paths types; CodingKeys map the terse web JSON; stable-id hashing | none |
-| **StudyEngines** | `StudySession` state machine (practice/mock/exam by config), `Leitner` SRS (srs.ts port), `Streaks`, `QuestionSampler`, `ReadinessAnalytics` | none |
+| **StudyEngines** | `StudySession` state machine (practice/mock/exam by config), `FSRS` memory model + `SRS` scheduler (fsrs.ts/srs.ts port), `Streaks`, `QuestionSampler`, `ReadinessAnalytics` | none |
 | **ContentKit** | `ContentLoader` (bundled JSON), `ContentStore` (cache-then-bundle), `ContentRefresher` (fetch + filter + validate the remote corpus into the cache — §2) | none |
 | **PersistenceKit** | SwiftData `@Model`s + `StudyStore` actor — the single write path for attempts/SRS/streaks | none |
 | **AppServices** | Protocol seams (`AuthProviding`, `EntitlementsProviding`, `ProgressSyncing`, `ChatClient`) + offline mocks | none |
@@ -114,7 +114,7 @@ every app in the family on the device:
 | Model | Keys | Holds |
 |---|---|---|
 | `ExamAttemptRecord` | moduleID, date | percent, passed, duration, per-bank blob — pruned to the **10 most recent per module** (web parity) |
-| `CardSRSRecord` | unique `"bankID\|cardKey"` + `questionID` hash | Leitner `box`, `dueDay` (UTC string) |
+| `CardSRSRecord` | unique `"bankID\|cardKey"` + `questionID` hash | FSRS `stability`/`difficulty`/`lastDay`/`reps`/`lapses` (all optional — lightweight migration), plus derived `box` and `dueDay` (UTC string) |
 | `ModuleProgressRecord` | unique moduleID | quiz-best-per-bank, lessons done, flagged questions (blobs) |
 | `StreakRecord` | singleton | day + count |
 
@@ -126,12 +126,14 @@ escape the actor, which sidesteps their non-Sendability.
 
 These semantics are shared with the web app; users move between the two:
 
-- **SRS** = literal port of `src/calc/study/srs.ts`: boxes 0–5, intervals
-  `[0, 1, 3, 7, 14, 30]` days, correct promotes (capped), wrong resets to 0,
-  unseen always due, mastered = box ≥ 3.
+- **SRS** = literal port of `src/calc/study/fsrs.ts` + `srs.ts`, **FSRS-6 since
+  2026-09** (it was a fixed Leitner ladder before). Per-card stability and
+  difficulty drive the interval; the `[0, 1, 3, 7, 14, 30]` ladder remains only
+  as a derived display `box`, so mastery is still box ≥ 3 ⇔ stability ≥ 7 days.
+  Unseen cards always due; a wrong answer stays due today.
 - **Due dates are UTC day-strings** (`yyyy-mm-dd`, string compare). The web
   uses `toISOString()`; a `Calendar.current` port would drift a day near
-  midnight. `Tests/StudyEnginesTests/LeitnerTests.swift` holds the parity
+  midnight. `Tests/StudyEnginesTests/SRSTests.swift` holds the parity
   vectors — if one fails, the platforms have diverged.
 - **Exam scoring** = web mock exam: `percent = round(correct/total × 100)`,
   `passed = percent ≥ passMark`, default 25 q / 30 min / 75 %, per-pack
@@ -152,7 +154,7 @@ round-trips through `QuizFile.decode` cleanly — writes `quiz.json` +
 a `contentVersion`-stamped `module.json` into `cacheDirectory` atomically.
 `StudyStore.reconcileSRS(bankID:quiz:)` is the follow-up: it rewrites each
 `CardSRSRecord` row's `cardKey` to its question's new position, matched by
-the stable `questionID` hash, so Leitner progress survives reordering instead
+the stable `questionID` hash, so SRS progress survives reordering instead
 of silently regrading the wrong question. Still open: the composition root
 that calls these on a schedule (app launch / background refresh) — that
 lands with PlatformLive, since it is also where the entitlement check for

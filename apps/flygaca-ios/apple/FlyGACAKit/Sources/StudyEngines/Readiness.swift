@@ -9,7 +9,7 @@ import Foundation
 public struct ModuleReadiness: Hashable, Sendable {
     /// Share of the module's banks with a recorded quiz score, 0…1.
     public let coverage: Double
-    /// Share of seen flashcards at/above the Leitner mastery box, 0…1.
+    /// Share of seen flashcards at/above the mastery box (stability ≥ 7 days), 0…1.
     public let mastery: Double
     /// Mean of the recent exam percents, 0…1; nil when no exams taken.
     public let examAverage: Double?
@@ -30,7 +30,7 @@ public enum ReadinessAnalytics {
             : Double(bankIDs.filter { quizBest[$0] != nil }.count) / Double(bankIDs.count)
         let mastery = cardCount == 0
             ? 0
-            : Double(Leitner.masteredCount(in: srs)) / Double(cardCount)
+            : Double(SRS.masteredCount(in: srs)) / Double(cardCount)
         let examAverage = examPercents.isEmpty
             ? nil
             : Double(examPercents.reduce(0, +)) / Double(examPercents.count) / 100
