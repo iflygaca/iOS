@@ -58,19 +58,24 @@
 ## 🎯 What's this?
 
 This repo merges the full git history of two previously separate repositories, each kept
-as its own top-level app under `apps/`:
+as its own top-level app under `apps/` — they build independently, they test independently,
+and they ship independently today:
 
-| App | Path | What it is |
+| App | Path | What it solves |
 | --- | --- | --- |
-| **FlyGACA iOS** | [`apps/flygaca-ios/`](apps/flygaca-ios/) | The `FlyGACAKit` Swift package family — ELPT and AIP study apps (exam prep, flashcards, spaced repetition, mock exams) sharing one layered package (`CoreModels` → `StudyEngines`/`ContentKit`/`AppServices`/`PersistenceKit` → `PlatformLive` → `FeatureUI`). |
-| **Captain Adel iOS** | [`apps/captain-adel-ios/`](apps/captain-adel-ios/) | The standalone "Captain Adel" cockpit app — an offline GACAR regulatory co-pilot with on-device TF-IDF/cosine-similarity retrieval, bilingual voice comms, and live METAR/TAF weather for Saudi aerodromes. |
+| **FlyGACA iOS** | [`apps/flygaca-ios/`](apps/flygaca-ios/) | **Structured learning for exam modules.** The `FlyGACAKit` Swift package family (ELPT, AIP) — exam prep, flashcards with spaced repetition, mock exams timed to regulatory pass marks (75% in 30 minutes). Everything offline; study progress syncs across app targets. Built on a zero-dependency package (`CoreModels` → `StudyEngines`/`ContentKit`/`AppServices`/`PersistenceKit` → `PlatformLive` → `FeatureUI`) so Swift changes are instant to test. |
+| **Captain Adel iOS** | [`apps/captain-adel-ios/`](apps/captain-adel-ios/) | **Regulatory lookup on the tarmac.** The standalone "Captain Adel" cockpit app — an offline GACAR regulatory co-pilot with on-device vector search (TF-IDF + cosine similarity), bilingual voice comms (EN/AR, text-to-speech), and live METAR/TAF weather for 61 Saudi aerodromes. No internet required after the first run. Built for the moment a crew needs to verify a procedure *before* takeoff. |
 
-Merged 2026-09-08 from [`iflygaca/FlyGACA-ios`](https://github.com/iflygaca/FlyGACA-ios) and
+### The Vision: One App
+The Fly GACA family's goal has always been **"Academics, Calculators, AI Instructor, Regulations"** in a single native experience. Today, these two apps are side-by-side in one git tree, one issue tracker, one CI system — the architectural integration is real follow-up work, tracked in [`apps/README.md`](apps/README.md#follow-up-deep-integration).
+
+**Why merge now?** Because a crew deserves both experiences from one app home. And because the engineering path from "two separate repos" → "two trees in one repo" → "integrated feature set sharing FlyGACAKit's study + Captain Adel's lookup" is now visible.
+
+**Merged 2026-09-08** from [`iflygaca/FlyGACA-ios`](https://github.com/iflygaca/FlyGACA-ios) and
 [`iflygaca/Captain-Adel-iOS`](https://github.com/iflygaca/Captain-Adel-iOS) — see
-[`apps/README.md`](apps/README.md) for how the merge was done, what changed, and what stayed
-untouched. **Both source repos remain on GitHub**, each carrying a notice pointing here; they are
-not deleted or archived (this session has no ability to archive a GitHub repo), and their own
-CI/CD and TestFlight pipelines keep running unchanged in place until a human decides otherwise.
+[`apps/README.md`](apps/README.md) for the merge mechanics, what changed, and what stayed
+untouched. **Both source repos remain on GitHub**, each with a pointer here; they are
+not archived, and their CI/CD and TestFlight pipelines continue running independently until a human decides otherwise.
 
 ---
 
@@ -92,22 +97,27 @@ iflygaca/ios
 Both trees build, test, and ship independently today via their own scoped GitHub Actions
 workflows — see [CI](#-ci) below.
 
-## Why merge
+## 🔄 Why merge — and why it matters
 
-The [Fly GACA family roster](https://github.com/iflygaca/FlyGACA-Family) already describes
-`FlyGACA-ios` as the flagship all-in-one native app spanning "Academics, Calculators, **AI
-Instructor**, Regulations" — but the AI Instructor (Captain Adel) experience didn't actually live
-in that codebase; it existed as a separate, fully-built standalone app. This repo is the first
-step toward that one-app vision: both codebases now share one home, one issue tracker, and one
-git history, so they can converge without losing either team's work.
+### The Problem
+The Fly GACA family goal is one native iOS experience: **"Academics, Calculators, AI Instructor, Regulations"** — but these were shipped as two separate repositories, two app binaries, two issue trackers. A crew had to choose: study mode (FlyGACA) *or* lookup-on-tarmac (Captain Adel), not both. And a bug fix in one repo couldn't inform design decisions in the other without manual cross-communication.
 
-**This pass is a side-by-side merge, not a deep architectural integration.** Captain Adel's chat,
-voice, METAR, and on-device RAG engine are not yet ported into `FlyGACAKit`'s `PlatformLive`/
-`FeatureUI` layers as a shared app target — that is real, substantial engineering work (new
-`ChatClient`/`PaymentProviding`-style service seams, a new `FeatureUI` screen, reconciling two
-different offline-corpus strategies) tracked as follow-up in
-[`apps/README.md`](apps/README.md#follow-up-deep-integration). Each app builds and ships
-independently today, exactly as it did in its own repo.
+### The Solution (This Merge)
+**Move from "two separate apps" to "two app targets in one codebase, working toward one unified native experience."**
+
+**This merger is Phase 1 of a 3-phase convergence plan:**
+
+1. **Phase 1 (done, this merge):** One git home, one CI, one issue tracker. Both apps build independently; no shared Swift code yet. Full history preserved; no loss of context.
+2. **Phase 2 (planned):** `FlyGACAKit` opens a `ChatClient` service seam. Captain Adel's chat engine is ported into `PlatformLive`. The underlying study and chat engines remain separate but their UIs can share a screen.
+3. **Phase 3 (future):** Unified app picker at install — crew can install just the study module, just the cockpit mode, or both, and they share one App Group (shared progress, shared GACAR corpus cache).
+
+### Architecture Today (Phase 1)
+Each app is **independent, unchanged, ready to ship**:
+- `apps/flygaca-ios/` — FlyGACAKit family (ELPT, AIP); no new dependencies; Swift 5.9+
+- `apps/captain-adel-ios/` — Standalone Captain Adel iOS app; on-device retrieval; voice comms; no cloud dependency in offline mode
+
+**This is intentional.** Captain Adel's chat, voice, METAR, and on-device RAG engine are *not* yet ported into `FlyGACAKit`'s `PlatformLive`/`FeatureUI` layers — that is real, substantial engineering work (new service seams, screen layout, corpus strategy reconciliation) tracked in
+[`apps/README.md`](apps/README.md#follow-up-deep-integration) with a detailed scope. Each app builds and ships independently today, exactly as it did in its own repo. The merger just gives them a shared home and a visible roadmap to convergence.
 
 ---
 
