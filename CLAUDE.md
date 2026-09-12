@@ -12,7 +12,7 @@ tree under `apps/` — **do not flatten them or move files between them casually
 | Path | App | Its own docs |
 | --- | --- | --- |
 | `apps/flygaca-ios/` | The `FlyGACAKit` study-app family (ELPT, AIP) | `apps/flygaca-ios/CLAUDE.md` (dense, authoritative for that tree), `apps/flygaca-ios/apple/ARCHITECTURE.md`, `apps/flygaca-ios/ROADMAP.md` |
-| `apps/captain-adel-ios/` | Captain Adel — the offline GACAR co-pilot app | `apps/captain-adel-ios/README.md`, `apps/captain-adel-ios/TESTFLIGHT_READINESS.md` |
+| `apps/captain-adel-ios/` | Captain Adel — the offline GACAR co-pilot app | `apps/captain-adel-ios/README.md`, `apps/captain-adel-ios/TESTFLIGHT_READINESS.md`, `apps/captain-adel-ios/ROADMAP.md` |
 
 **Treat each app's own `CLAUDE.md`/`README.md` as authoritative for anything inside that app's
 directory.** They were merged as-is and describe each app's own architecture, build commands, and

@@ -1,18 +1,33 @@
 # Roadmap — ay2m/FlyGACA (the native iOS family)
 
 What's next for the Fly GACA iOS apps. The extraction from the web monorepo is **complete** —
-this repo generates, builds, tests and archives its apps (ELPT, AIP) on its own. This file looks
-**forward** and is the **single source of truth for open work in this repo**; the extraction
-history lives in [`MIGRATION.md`](./MIGRATION.md) (history only — no open items are tracked
-there).
+this repo generates, builds, tests and archives its apps (ELPT, AIP, **and the `FlyGACA`
+flagship**) on its own. This file looks **forward** and is the **single source of truth for open
+work in this repo**; the extraction history lives in [`MIGRATION.md`](./MIGRATION.md) (history
+only — no open items are tracked there).
+
+This roadmap has **two tracks**, because the two products ship on different timelines and answer
+different questions: the **standalone module apps** (ELPT, AIP today; more modules later) are the
+ASA-style paid exam-prep line; the **`FlyGACA` flagship** is the free umbrella app (library, tools,
+guides, Captain Adel) that funnels into them. "Now / Next / Later" for the module-apps track is
+below; the flagship's own Now/Next/Later is in its own section further down — don't merge the two,
+they have different Definitions of Done and different App Store listings.
 
 > **Paused: the licence-exam modules.** PPL, CPL, IR and ATPL are on hold pending a strategic
-> decision, and were removed from this repo on 2026-08-10 — targets, xcconfigs, bundled content,
-> icons, npm scripts, CI matrices and the screenshot sets. Nothing is lost: they live in git
-> history, their App Store metadata repos are intact and marked parked, and their web study
-> packs are untouched and still selling at `flygaca.com/study/packs/*`. Restoring one is a
-> revert of that commit plus its Apple-portal steps. Until then the family is **ELPT + AIP**,
-> and no roadmap item below covers a paused module.
+> decision, and were removed from this repo **as standalone app targets** on 2026-08-10 —
+> targets, xcconfigs, per-module Content snapshots, icons, npm scripts, CI matrices and the
+> screenshot sets. Nothing is lost: they live in git history, their App Store metadata repos are
+> intact and marked parked, and their web study packs are untouched and still selling at
+> `flygaca.com/study/packs/*`. Restoring one **as a standalone app** is a revert of that commit
+> plus its Apple-portal steps. Until then the module-apps family is **ELPT + AIP**, and no
+> module-apps roadmap item below covers a paused module.
+>
+> **Important nuance found 2026-09-12**: the *flagship* `FlyGACA` target's own bundled
+> `Content/catalog.json` still lists `ppl-exam`/`cpl`/`ir`/`atpl` as regular, unlocked entries —
+> this predates the pause and was never cleaned up when the standalone targets were removed. See
+> "①  Lock the flagship catalog" below — this is being fixed to a "Coming soon" (locked, visible,
+> unopenable) tile per module, not a full removal, so the flagship can tease the licence line
+> without shipping content nobody decided to ship.
 
 ## How to read this
 
@@ -102,6 +117,80 @@ there).
 - **[docs] Re-review `THE-BOOK-OF-FLY-GACA.md`'s dated stamps** whenever any repo's shape
   moves — the Book describes, it does not govern, and its "Last reviewed" dates are the honesty
   mechanism.
+
+## The `FlyGACA` flagship app — its own roadmap
+
+Decided 2026-09-12: the flagship stays **free** (it is the top-of-funnel for ELPT/AIP and any
+future module app, not a revenue line itself), and **Captain Adel inside it is metered** — a
+small free daily quota, then an auto-renewable subscription. The standalone **Captain Adel iOS
+app (`apps/captain-adel-ios`, `com.flygaca.captainadel`) stays fully independent** — no shared
+account, no shared corpus, no migration between them; see its own `ROADMAP.md`. Anywhere below
+that says "Captain Adel" means the chat tab **inside `FlyGACA`**, not the other app.
+
+What already exists, found while auditing this repo (not documented anywhere before this pass):
+a `FlyGACA` app target (`com.flygaca.app`) building and testing in CI (`flygaca-ios.yml`
+matrix, TestFlight lane included), a 5-tab `MainAppView` (Home / Academics / Flight Deck Tools /
+Captain Adel AI / Regulations Library), and a `CaptainAdelChatView` **already wired** to the real
+`PlatformLive.CaptainAdelSSEClient` hitting `https://flygaca.com/api/chat` — not a mock. Treat all
+of that as *built*; the items below are what's actually missing, not "wire up PlatformLive" (it's
+wired).
+
+### Now
+
+- **① Lock the flagship catalog.** `Apps/FlyGACA/Content/catalog.json` lists `ppl-exam`, `cpl`,
+  `ir`, `atpl` as regular open entries. Change them to a locked "Coming soon" tile in
+  `AcademicsCatalogView`/`MainDashboardView` (visible, not tappable into content) instead of
+  either shipping paused content unreviewed or hiding the licence line entirely. This is a
+  `catalog.json` schema addition (a `status: "comingSoon"` field) generated in the monorepo's
+  `build-ios-content.mjs`, plus the small `FeatureUI` change to render a locked state — coordinate
+  the schema addition with whoever owns that script in `ay2m/FlyGACA`.
+- **② Correct the documentation drift.** `CLAUDE.md` (both this repo's root and this app's own),
+  `apple/ARCHITECTURE.md` §5's Roadmap table, and `apps/README.md#follow-up-deep-integration` all
+  currently say PlatformLive/Captain Adel chat is "not wired in yet". It is. Update those four
+  places in the same PR as ①, so the next person (human or agent) doesn't re-discover this the
+  hard way or, worse, tries to "build" something that already ships.
+- **③ Confirm the Apple-portal state for `com.flygaca.app`.** `docs/PORTAL-RUNSHEET-wave1.md`
+  covers ELPT/AIP; it needs a flagship section: App ID exists?, `PROVISIONING_PROFILE_SPECIFIER`
+  = `FlyGACA FlyGACA AppStore` actually issued (the name is auto-derived from `project.yml`'s
+  `${target_name}` template — double-check it isn't rejected as malformed), `PROFILE_FLYGACA_B64`
+  secret populated, App Store Connect record created with **Price: Free** (not the SAR 79/139
+  paid-app default `ARCHITECTURE.md` §4 describes for ELPT/AIP).
+
+### Next
+
+- **[product] Build the Guides section.** No equivalent of the web's Guides (licensing walkthrough,
+  medical, licence conversion, English proficiency test) exists in `FeatureUI` today. New tab or
+  a Home-dashboard section (design call, not an engineering one) backed by new content synced from
+  `content/guides` in `ay2m/FlyGACA` through an extension to `build-ios-content.mjs` /
+  `sync-content.sh` — the same "content lives in the monorepo, Swift lives here" split as every
+  other content type.
+- **[platform] Captain Adel metering via StoreKit — not Moyasar.** `PlatformLive` already has
+  `MoyasarPaymentService`, but Moyasar is a web payment rail; Apple requires **StoreKit /
+  In-App Purchase** for unlocking any digital feature inside an iOS app. This needs: a StoreKit
+  auto-renewable subscription product (e.g. "FlyGACA Pro"), server-side receipt validation
+  (coordinate with `flygaca-backend`/`flygaca-billing-payments` for where that validation and the
+  entitlement record live — likely a new `packEntitlements`-style check next to the existing
+  Firestore-backed `EntitlementsProviding`), and a client-side free-quota counter (e.g. 5
+  messages/day) gating `CaptainAdelChatView` before the paywall shows.
+- **[platform] Rate-limit coordination.** `CaptainAdelChatView` calls `flygaca.com/api/chat`
+  directly, unauthenticated, with no client identifier today. Before this ships broadly, confirm
+  with `flygaca-rag-chat`/`flygaca-backend` that an anonymous mobile client can't blow through the
+  same quota the web's anonymous tier relies on — this may need a device-bound identifier or an
+  App Attest–backed token, decided together with the metering work above (same PR family).
+
+### Later
+
+- **[product] Full offline regulatory library.** `Content/regulations.json` today is a 34 KB
+  *index* (`generated`, `source`, `count`, `categories`, `documents` — titles/metadata, not full
+  text) and `airports.json` is real aerodrome data. Decide whether the flagship's "Library" tab
+  ships full offline GACAR text (bigger bundle, matches the web's promise) or stays an index that
+  deep-links into `flygaca.com` for the full text (smaller app, needs connectivity for reading).
+  This is a product-scope decision, not a technical blocker either way.
+- **[product] New modules keep landing as standalone apps, automatically.** No new engineering
+  needed here — see "Wave 3 modules" above. The flagship's catalog and the standalone-app list are
+  two different surfaces fed by the same monorepo pack catalog; adding a pack to `prepCatalog.ts`
+  is enough for both to pick it up (flagship: a catalog entry; standalone: a new `project.yml`
+  target, whenever that module is un-paused or launches new).
 
 ## How we ship (Definition of Done)
 
