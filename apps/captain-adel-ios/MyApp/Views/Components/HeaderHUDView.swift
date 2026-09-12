@@ -68,7 +68,7 @@ struct HeaderHUDView: View {
                 HStack(spacing: 7) {
                     // FL380 Flight Mode Quick Toggle
                     Button(action: {
-                        Haptics.impact(.medium)
+                        Haptics.medium()
                         withAnimation(.spring(response: 0.3)) {
                             aiService.toggleFL380FlightMode()
                         }
@@ -90,7 +90,7 @@ struct HeaderHUDView: View {
 
                     // AI Comms Engine Config Button
                     Button(action: {
-                        Haptics.impact(.light)
+                        Haptics.light()
                         onSettingsTap()
                     }) {
                         ZStack {
@@ -110,7 +110,7 @@ struct HeaderHUDView: View {
 
                     // Voice Mode Button
                     Button(action: {
-                        Haptics.impact(.medium)
+                        Haptics.medium()
                         onVoiceModeTap()
                     }) {
                         ZStack {
@@ -189,7 +189,7 @@ struct HeaderHUDView: View {
                     .frame(height: 24)
 
                 Button(action: {
-                    Haptics.impact(.light)
+                    Haptics.light()
                     onSettingsTap()
                 }) {
                     telemetryCell(

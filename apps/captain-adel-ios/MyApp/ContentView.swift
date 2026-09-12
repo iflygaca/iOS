@@ -4,6 +4,8 @@ struct ContentView: View {
     @StateObject private var aiService = CaptainAdelAIService()
     @State private var selectedTab: Int = 0
     @State private var currentLanguage: AppLanguage = .english
+    @AppStorage("hasCompletedBriefing") private var hasCompletedBriefing: Bool = false
+    @State private var showOnboarding: Bool = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -23,7 +25,7 @@ struct ContentView: View {
             AboutView(currentLanguage: $currentLanguage)
                 .tag(3)
         }
-        #if os(iOS)
+        #if !os(macOS)
         .toolbar(.hidden, for: .tabBar)
         #endif
         .accentColor(AvionicsTheme.cyan)
@@ -33,6 +35,21 @@ struct ContentView: View {
         .background(AvionicsTheme.bg.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .environment(\.layoutDirection, currentLanguage.isRTL ? .rightToLeft : .leftToRight)
+        .onAppear {
+            if !hasCompletedBriefing {
+                showOnboarding = true
+            }
+        }
+        #if !os(macOS)
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingIntroView(currentLanguage: $currentLanguage, isPresented: $showOnboarding)
+        }
+        #else
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingIntroView(currentLanguage: $currentLanguage, isPresented: $showOnboarding)
+                .frame(minWidth: 520, minHeight: 680)
+        }
+        #endif
     }
 }
 

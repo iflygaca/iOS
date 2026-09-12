@@ -8,30 +8,22 @@ struct ChatView: View {
     @State private var showSettingsModal: Bool = false
     @FocusState private var isInputFocused: Bool
 
-    // Expanded prompt pills matching captadel.com authoritative queries
+    // Exact prompt pills matching captadel.com queries
     private let promptPillsEn = [
         "VFR weather minima in Class C/D? (§91.155)",
         "Fuel reserve for VFR night flight? (§91.151)",
-        "Alternate airport 1-2-3 rule? (§121.619)",
-        "Drone night flight lighting rules? (§107.29)",
-        "Class 1 Medical validity under age 40? (§67.13)",
         "Minimum safe altitude over cities? (§91.119)",
         "Speed limit below 10,000 ft? (§91.117)",
         "Recent flight experience for passengers? (§61.57)",
-        "Aircraft Dispatcher age & requirements? (§65.53)",
         "Suborbital hops over Empty Quarter? (Refusal)"
     ]
 
     private let promptPillsAr = [
         "الحد الأدنى للرؤية VFR في الأجواء المراقبة؟ (§91.155)",
         "احتياطي الوقود للطيران البصري ليلاً؟ (§91.151)",
-        "قاعدة 1-2-3 لتحديد المطار البديل؟ (§121.619)",
-        "متطلبات إضاءة الدرونز في الطيران الليلي؟ (§107.29)",
-        "صلاحية الفحص الطبي فئة أولى دون سن 40؟ (§67.13)",
         "الارتفاع الآمن فوق المدن والمناطق المأهولة؟ (§91.119)",
         "السرعة القصوى تحت 10,000 قدم؟ (§91.117)",
         "شروط الخبرة الحديثة لنقل الركاب؟ (§61.57)",
-        "شروط رخصة مرحل جوي Dispatcher؟ (§65.53)",
         "رحلات مدارية فوق الربع الخالي؟ (تجربة الاعتذار)"
     ]
 
@@ -90,6 +82,10 @@ struct ChatView: View {
                         // Doctrine Banner
                         doctrineBanner
 
+                        if aiService.messages.count <= 1 {
+                            cockpitHeroWelcomeCard
+                        }
+
                         // Messages
                         ForEach(aiService.messages) { message in
                             CockpitMessageRowView(message: message, language: currentLanguage)
@@ -109,7 +105,7 @@ struct ChatView: View {
                     .padding(.vertical, 12)
                 }
                 .background(CockpitBackdrop())
-                .onChange(of: aiService.messages.count) {
+                .onChange(of: aiService.messages.count) { _, _ in
                     if let lastMsg = aiService.messages.last {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
                             proxy.scrollTo(lastMsg.id, anchor: .bottom)
@@ -280,6 +276,49 @@ struct ChatView: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 14, glow: false, tint: 0.55)
+    }
+
+    private var cockpitHeroWelcomeCard: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(AvionicsTheme.heroAura())
+                    .frame(width: 68, height: 68)
+                    .blur(radius: 4)
+
+                Image.captainAvatar
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 60, height: 60)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(AvionicsTheme.cyan, lineWidth: 1.5))
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(currentLanguage == .arabic ? "كابتن عادل على المحطة" : "CAPTAIN ADEL ON STATION")
+                        .font(.system(size: 13, weight: .heavy, design: .monospaced))
+                        .foregroundStyle(AvionicsTheme.mintCyanGradient)
+
+                    Text("OERK")
+                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(AvionicsTheme.amber.opacity(0.2)))
+                        .foregroundColor(AvionicsTheme.amber)
+                }
+
+                Text(currentLanguage == .arabic ?
+                     "جاهز للإجابة الفورية عن أنظمة ولوائح الطيران المدني السعودي، متطلبات الرخص، وإجراءات الطيران العملي." :
+                     "Ready on comms for Saudi Civil Aviation regulations, pilot licensing, flight operations, and ground school.")
+                    .font(.system(size: 11.5))
+                    .foregroundColor(AvionicsTheme.inkDim)
+                    .lineLimit(2)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassPanel(accent: AvionicsTheme.cyan, cornerRadius: 14, glow: true, tint: 0.7)
     }
 
     private var cockpitThinkingIndicator: some View {

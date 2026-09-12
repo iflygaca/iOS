@@ -12,11 +12,11 @@ enum AvionicsTheme {
     static let line = Color(red: 26/255, green: 37/255, blue: 64/255)    // #1a2540
     static let ink = Color(red: 230/255, green: 237/255, blue: 246/255)  // #e6edf6
     static let inkDim = Color(red: 139/255, green: 152/255, blue: 173/255) // #8b98ad
-    static let secondary = inkDim                                         // Secondary label / icon color
     static let cyan = Color(red: 34/255, green: 211/255, blue: 238/255)  // #22d3ee
     static let teal = Color(red: 45/255, green: 142/255, blue: 168/255)  // #2d8ea8
     static let mint = Color(red: 52/255, green: 211/255, blue: 153/255)  // #34d399
     static let amber = Color(red: 251/255, green: 191/255, blue: 36/255) // #fbbf24
+    static let gold = Color(red: 245/255, green: 197/255, blue: 66/255)  // #f5c542
     static let red = Color(red: 248/255, green: 113/255, blue: 113/255)  // #f87171
     
     // GACAR Parts list for the ticker tape
@@ -119,20 +119,47 @@ enum Haptics {
 extension Image {
     static var captainAvatar: Image {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let img = NSImage(contentsOfFile: "/Users/ad/Documents/GitHub/Captain-Adel-iOS/MyApp/Assets.xcassets/CaptainAvatar.imageset/avatar.png") {
+        if let img = NSImage(named: "CaptainAvatar") {
             return Image(nsImage: img)
         }
         #endif
-        return Image("avatar")
+        return Image("CaptainAvatar")
     }
     
     static var captainPortrait: Image {
         #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-        if let img = NSImage(contentsOfFile: "/Users/ad/Documents/GitHub/Captain-Adel-iOS/MyApp/Assets.xcassets/CaptainAdelPortrait.imageset/captain-adel.jpg") {
+        if let img = NSImage(named: "CaptainAdelPortrait") {
             return Image(nsImage: img)
         }
         #endif
-        return Image("captain-adel")
+        return Image("CaptainAdelPortrait")
+    }
+
+    static var captainWalkaround: Image {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let img = NSImage(named: "CaptainWalkaround") {
+            return Image(nsImage: img)
+        }
+        #endif
+        return Image("CaptainWalkaround")
+    }
+
+    static var captainDesk: Image {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let img = NSImage(named: "CaptainDesk") {
+            return Image(nsImage: img)
+        }
+        #endif
+        return Image("CaptainDesk")
+    }
+
+    static var captainLogo: Image {
+        #if canImport(AppKit) && !targetEnvironment(macCatalyst)
+        if let img = NSImage(named: "CaptainLogo") {
+            return Image(nsImage: img)
+        }
+        #endif
+        return Image("CaptainLogo")
     }
 }
 
@@ -166,6 +193,24 @@ extension View {
             backgroundColor: backgroundColor,
             cornerRadius: cornerRadius
         ))
+    }
+
+    @ViewBuilder
+    func navigationBarTitleDisplayModeInline() -> some View {
+        #if !os(macOS)
+        self.navigationBarTitleDisplayMode(.inline)
+        #else
+        self
+        #endif
+    }
+
+    @ViewBuilder
+    func disableAutocapitalization() -> some View {
+        #if !os(macOS)
+        self.textInputAutocapitalization(.never)
+        #else
+        self
+        #endif
     }
 }
 

@@ -173,9 +173,9 @@ enum FlightCategory: String, CaseIterable {
 
     var color: Color {
         switch self {
-        case .vfr: return AvionicsTheme.mint
-        case .mvfr: return AvionicsTheme.cyan
-        case .ifr: return AvionicsTheme.amber
+        case .vfr: return Color(red: 52/255, green: 211/255, blue: 153/255)
+        case .mvfr: return Color(red: 34/255, green: 211/255, blue: 238/255)
+        case .ifr: return Color(red: 251/255, green: 191/255, blue: 36/255)
         case .lifr: return Color.purple
         }
     }

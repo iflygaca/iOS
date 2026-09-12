@@ -142,7 +142,7 @@ struct CitationDetailModal: View {
                 }
             }
             .navigationTitle(citation.partNumber)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayModeInline()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(language == .arabic ? "إغلاق" : "Close") { dismiss() }

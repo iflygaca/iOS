@@ -18,12 +18,18 @@ echo -e "${CYAN}  ✈️  CAPTAIN ADEL iOS - TESTFLIGHT ARCHIVE PIPELINE  ${NC}"
 echo -e "${CYAN}======================================================${NC}"
 
 # 1. Developer Directory & Toolchain Check
-if [ -d "/Applications/Xcode-beta.app" ]; then
-    export DEVELOPER_DIR="/Applications/Xcode-beta.app/Contents/Developer"
-elif [ -d "/Applications/Xcode.app" ]; then
-    export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+if [ -z "${DEVELOPER_DIR:-}" ]; then
+    if [ -d "/Applications/Xcode-beta.app" ]; then
+        export DEVELOPER_DIR="/Applications/Xcode-beta.app/Contents/Developer"
+    elif [ -d "/Applications/Xcode.app" ]; then
+        export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+    elif [ -d "$HOME/Downloads/Xcode-beta.app" ]; then
+        export DEVELOPER_DIR="$HOME/Downloads/Xcode-beta.app/Contents/Developer"
+    elif [ -d "$HOME/Downloads/Xcode.app" ]; then
+        export DEVELOPER_DIR="$HOME/Downloads/Xcode.app/Contents/Developer"
+    fi
 fi
-echo -e "Using Xcode: ${GREEN}$(xcode-select -p)${NC}"
+echo -e "Using Xcode: ${GREEN}$(xcodebuild -version | head -n 1)${NC}"
 
 SCHEME="MyApp"
 PROJECT="captadel.xcodeproj"
@@ -75,11 +81,16 @@ if [ -n "${APP_STORE_CONNECT_KEY_ID:-}" ] && [ -n "${APP_STORE_CONNECT_ISSUER_ID
     echo -e "${CYAN}App Store Connect API credentials detected. Initiating TestFlight upload...${NC}"
     IPA_FILE=$(find "${EXPORT_PATH}" -name "*.ipa" | head -n 1)
     if [ -n "${IPA_FILE}" ]; then
-        xcrun altool --upload-app \
-            --type ios \
-            --file "${IPA_FILE}" \
-            --apiKey "${APP_STORE_CONNECT_KEY_ID}" \
-            --apiIssuer "${APP_STORE_CONNECT_ISSUER_ID}"
+        if command -v fastlane >/dev/null 2>&1; then
+            echo -e "${CYAN}Deploying via Fastlane upload_to_testflight...${NC}"
+            bundle exec fastlane beta changelog:"Captain Adel Automated Local Build"
+        else
+            xcrun altool --upload-app \
+                --type ios \
+                --file "${IPA_FILE}" \
+                --apiKey "${APP_STORE_CONNECT_KEY_ID}" \
+                --apiIssuer "${APP_STORE_CONNECT_ISSUER_ID}"
+        fi
         echo -e "${GREEN}✓ Upload to TestFlight submitted successfully!${NC}"
     fi
 else
