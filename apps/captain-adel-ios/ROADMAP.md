@@ -1,43 +1,63 @@
 # Roadmap — Captain Adel iOS (`com.flygaca.captainadel`)
 
-What's next for the standalone Captain Adel iOS app. **This app is fully independent of the
-`FlyGACA` flagship app in `apps/flygaca-ios`** — decided 2026-09-12. No shared account, no shared
-corpus, no shared entitlement, no planned migration of users between them. `apps/flygaca-ios` also
-has its own Captain Adel *chat feature* (a tab inside its `FlyGACA` app target, backed by
-`PlatformLive.CaptainAdelSSEClient` calling `flygaca.com/api/chat`) — that is a different product
-with a different roadmap (`apps/flygaca-ios/ROADMAP.md`'s "flagship" section). Don't conflate the
-two when reading either doc.
+What's next for the standalone Captain Adel iOS app. **Product split, decided 2026-09-12: Captain
+Adel is chat only — everywhere it ships.** This app stays independent from the `FlyGACA` flagship
+app (`apps/flygaca-ios`) at the **account/runtime level**: no shared login, no shared entitlement,
+no user migration between them, ever. It is **not** independent at the **feature-scope level**:
+this app currently also carries a Library, a Tools screen, and an exam-question bank that belong
+in FlyGACA by the new split (FlyGACA = library + tools + guides). Those get **ported into FlyGACA
+first, then removed from here** — see "Now" below for the exact file-by-file plan. `apps/flygaca-
+ios` has its own Captain Adel *chat feature* too (a tab inside its `FlyGACA` app target, backed by
+`PlatformLive.CaptainAdelSSEClient` calling `flygaca.com/api/chat`) — a different product with a
+different roadmap (`apps/flygaca-ios/ROADMAP.md`'s "flagship" section, which has the matching
+porting-in plan). Don't conflate the two when reading either doc.
 
 Read `README.md` for the full feature list and architecture and `TESTFLIGHT_READINESS.md` for the
 release mechanics — this file looks forward only.
 
-## What this app already is
+## What this app already is — and where each piece ends up
 
-Not a thin chat wrapper: a self-contained offline avionics/reference suite —
+Not a thin chat wrapper today: a self-contained offline avionics/reference suite. Marked below
+per the 2026-09-12 split — **[stays]** = part of "Captain Adel = chat", **[moves → FlyGACA]** =
+belongs in the flagship instead, per its `ROADMAP.md`'s matching "Next" section:
 
-- **74-part GACAR corpus, 100% on-device** (`GACARCorpusDatabase.swift`), searched by an Int8
-  quantized BM25 + cosine-similarity engine (`GACARVectorSearchEngine.swift`) with a hard
-  cite-or-refuse threshold (cosine 0.28) — it refuses rather than answers ungrounded, same
-  doctrine as the `captadel.com` service.
-- **Hybrid cloud/offline AI** (`CaptainAdelAIService.swift`): the offline doctrine engine is
-  always available; `AIProviderConfig.swift` also lets a user point the app at Hugging Face,
-  a "Fly GACA Cloud RAG" endpoint, or any OpenAI-compatible API with their own key
-  (`KeychainHelper.swift` stores it). This is a **user-configurable BYO-key option**, not a
-  product dependency on `flygaca.com` — keep it that way; don't wire a default/mandatory call to
-  another family service into this app without a deliberate decision (mirrors the "stays
-  independent" call above).
-- **Live Saudi METAR/TAF** for 26 aerodromes from NOAA (`METARService.swift`).
-- **Hands-free cockpit voice comms**: bilingual (`ar-SA`/`en-US`) speech recognition + synthesized
-  voice playback (`CockpitVoiceCommsService.swift`).
-- **FMC flight-computer suite**: VFR fuel reserve, crosswind/headwind resolver, density altitude,
-  top-of-descent — 4 real calculators, not stubs.
-- **26-question GACAR exam bank** with bilingual explanations (`QuizService.swift`).
+- **[stays]** **74-part GACAR corpus, 100% on-device** (`GACARCorpusDatabase.swift`), searched by
+  an Int8 quantized BM25 + cosine-similarity engine (`GACARVectorSearchEngine.swift`) with a hard
+  cite-or-refuse threshold (cosine 0.28). This is the chat's *grounding engine*, not a browsing
+  library — the chat needs it to answer and cite; it stays. (It's also, bluntly, a third hand-typed
+  copy of the same 74-part corpus FlyGACA is now syncing for real — see "Later".)
+- **[stays]** **Hybrid cloud/offline AI** (`CaptainAdelAIService.swift`) and the BYO-provider option
+  (`AIProviderConfig.swift`, `KeychainHelper.swift`) — this is the chat itself.
+- **[stays]** **Hands-free cockpit voice comms** (`CockpitVoiceCommsService.swift`) and the citation
+  card / HUD / waveform components under `Views/Components/` — these serve the chat, not
+  independent browsing.
+- **[moves → FlyGACA]** **`GACARLibraryView.swift`** — a standalone regulatory-library browser.
+  Duplicates what FlyGACA's `RegulationsLibraryView` is meant to be; FlyGACA's version becomes the
+  real one once it syncs full text (see its `ROADMAP.md`).
+- **[moves → FlyGACA]** **`AviationToolsView.swift`** — Saudi METAR/TAF (`METARService.swift`,
+  26 aerodromes via NOAA) plus the 4-calculator FMC suite (VFR fuel reserve, crosswind/headwind,
+  density altitude, top-of-descent). These are general flight tools, not chat features; they move
+  into FlyGACA's `FlightDeckToolsView`.
+- **[moves → FlyGACA]** **`QuizService.swift`** — the 26-question bilingual GACAR exam bank. Moves
+  in as real pack content consumed by FlyGACAKit's existing quiz engine, not as ported Swift code
+  (see FlyGACA's `ROADMAP.md` — "port as a content pack, not a parallel `QuizService`").
 - CI (`ci.yml` in this app's own dir; scoped at the merged-repo root as
   `captain-adel-ios-ci.yml`/`captain-adel-ios-testflight.yml`) and a Fastlane + shell-script
-  archive path both exist and are documented.
+  archive path both exist and are documented — unaffected by the above.
 
 ## Now
 
+- **[product] Extraction plan: port first, remove second — do not remove first.** Sequence
+  matters: `GACARLibraryView`, `AviationToolsView`, and `QuizService` stay live in this app,
+  unchanged, **until FlyGACA's replacements actually ship** (real synced Library, ported Tools, the
+  exam bank as a content pack — tracked in `apps/flygaca-ios/ROADMAP.md`'s flagship "Next"
+  section). Removing them here first would regress every existing Captain Adel TestFlight/App
+  Store user for however long the FlyGACA side takes. Once FlyGACA's versions are live and
+  verified: delete `GACARLibraryView.swift`, `AviationToolsView.swift`, `METARService.swift`,
+  `QuizService.swift`, and their tab-bar entries in `ContentView.swift`/`MyApp.swift`, leaving a
+  chat-only tab bar (Chat + About, plus whatever voice/settings sheets the chat itself needs).
+  This is a real Xcode-project change (`captadel.xcodeproj` target sources) — make it in a session
+  with a Mac, or push it and let `ci.yml`'s `macos-15` build catch anything broken.
 - **[platform] Verify the automated test suite is real Swift coverage, not just the Python
   harness.** `scripts/run_automated_tests.py` (29/29 passing per `README.md`) checks FMC math and
   corpus integrity from outside Xcode — valuable, but it is not `XCTest` and doesn't run inside
@@ -84,11 +104,19 @@ Not a thin chat wrapper: a self-contained offline avionics/reference suite —
 
 ## Later
 
-- **[product] Re-evaluate independence only if the business case changes.** The 2026-09-12
-  decision to keep this app fully separate from `FlyGACA` is a product call, not a technical
-  constraint — `AIProviderConfig`'s existing `.flyGACA` cloud-RAG option shows the two *can* talk
-  if a future decision wants them to. Don't build toward that unprompted; this line exists so a
-  future revisit starts from "here's the one existing integration point" instead of zero.
+- **[platform] Point this app's corpus at the same synced source FlyGACA uses.**
+  `GACARCorpusDatabase.swift` is a hand-typed third copy of the 74-part corpus. Once
+  `apps/flygaca-ios`'s content-sync extension lands (pulling `public/data/parts/*.html` +
+  `gacar-index.json` from `ay2m/FlyGACA` on every `sync-content.sh` run), give this app the same
+  synced snapshot instead of maintaining its own by hand — the retrieval *engine*
+  (`GACARVectorSearchEngine.swift`) stays exactly as-is, only its data source changes from
+  hand-typed Swift to a synced JSON/HTML bundle. This is a content-sourcing fix, not a coupling to
+  `FlyGACA` at runtime — account/entitlement independence (see the top of this file) is unaffected.
+- **[product] Account-level integration stays a live option, not a plan.** `AIProviderConfig`'s
+  existing `.flyGACA` cloud-RAG provider option shows the two apps *can* talk if a future business
+  decision wants shared accounts or entitlements — don't build toward that unprompted; this line
+  exists so a future revisit starts from "here's the one existing integration point" instead of
+  zero.
 - **[platform] iPad/Mac Catalyst verification.** `TESTFLIGHT_READINESS.md` states iOS 17+
   "Supports iPhone, iPad & Mac Catalyst" — confirm the voice-comms and METAR views actually adapt
   (they read as iPhone-cockpit-HUD-shaped UI); if Catalyst was declared but never verified on a
@@ -103,6 +131,10 @@ Not a thin chat wrapper: a self-contained offline avionics/reference suite —
   look better — a refusal is a correct answer, not a bug.
 - The disclaimer (independent platform, not affiliated with GACA, GACA is authoritative) stays
   verbatim everywhere it appears, matching every other Fly GACA surface.
-- Any change that touches whether this app talks to another family service (`flygaca.com`,
-  `captadel.com`, or otherwise) is a product decision first — flag it, don't wire it silently,
-  per the independence decision above.
+- Any change that touches account, entitlement, or login coupling with another family service
+  (`flygaca.com`, `captadel.com`, or otherwise) is a product decision first — flag it, don't wire
+  it silently. Content-sourcing changes (pointing at a synced corpus snapshot, per "Later" above)
+  are not this — that's a data-pipeline fix, not a coupling decision.
+- Don't remove `GACARLibraryView`, `AviationToolsView`, or `QuizService` until their FlyGACA
+  replacements are live — see "Now" above. A PR that removes one without the other existing and
+  verified is out of sequence, not "ahead of schedule".

@@ -122,10 +122,18 @@ they have different Definitions of Done and different App Store listings.
 
 Decided 2026-09-12: the flagship stays **free** (it is the top-of-funnel for ELPT/AIP and any
 future module app, not a revenue line itself), and **Captain Adel inside it is metered** — a
-small free daily quota, then an auto-renewable subscription. The standalone **Captain Adel iOS
-app (`apps/captain-adel-ios`, `com.flygaca.captainadel`) stays fully independent** — no shared
-account, no shared corpus, no migration between them; see its own `ROADMAP.md`. Anywhere below
-that says "Captain Adel" means the chat tab **inside `FlyGACA`**, not the other app.
+small free daily quota, then an auto-renewable subscription.
+
+**Product split, sharpened 2026-09-12**: Captain Adel (in either app) is **chat only**; FlyGACA is
+**library + tools + guides**, module apps unchanged. The standalone **Captain Adel iOS app**
+(`apps/captain-adel-ios`, `com.flygaca.captainadel`) keeps its own account/runtime/corpus
+independence — no shared login, no shared entitlement, no user migration — but it is **not**
+independent at the *code and content* level: it currently carries Library/Tools/Quiz features that
+belong in FlyGACA by this split, and those get ported here rather than rebuilt twice (see "Next"
+below). Once ported and shipped, they're removed from Captain Adel iOS, which then really is chat
++ voice + citations only. See `apps/captain-adel-ios/ROADMAP.md` for the removal side and the
+exact stay/move file list. Anywhere below that says "Captain Adel" means the chat tab **inside
+`FlyGACA`**, not the other app.
 
 What already exists, found while auditing this repo (not documented anywhere before this pass):
 a `FlyGACA` app target (`com.flygaca.app`) building and testing in CI (`flygaca-ios.yml`
@@ -178,19 +186,63 @@ wired).
   same quota the web's anonymous tier relies on — this may need a device-bound identifier or an
   App Attest–backed token, decided together with the metering work above (same PR family).
 
+### Next — the real Library, ported Tools, and closing the clean split (decided 2026-09-12)
+
+The product split is now explicit: **Captain Adel = chat only** (anywhere it ships); **FlyGACA =
+library + tools + guides**, module apps unchanged. The standalone Captain Adel iOS app currently
+carries its own Library (`GACARLibraryView.swift`), Tools (`AviationToolsView.swift`: METAR + FMC
+calculators), and a 26-question exam bank (`QuizService.swift`) — these get **ported into FlyGACA**
+(not rebuilt from zero, not left duplicated) and then **removed from Captain Adel iOS** once the
+FlyGACA replacements ship. See `apps/captain-adel-ios/ROADMAP.md`'s matching "Now" section for the
+removal side of this — **build here first, remove there second**, so no existing Captain Adel
+tester loses a feature before its replacement exists.
+
+- **[product] Real Library content — stop hand-copying, start syncing.** Audited 2026-09-12:
+  `Apps/FlyGACA/Content/regulations.json` is schema-identical to `ay2m/FlyGACA`'s
+  `public/data/gacar-index.json` (same `generated/source/sourceUrl/count/categories/documents`
+  shape) — it's a **one-off hand-copy of the real index**, produced by no committed script. The
+  real full text lives in `public/data/parts/part-*.html` (74 files, ~7.3 MB) and was never synced
+  at all — today's flagship Library is outline-only. Fix: extend `scripts/build-ios-content.mjs`
+  (or a sibling `scripts/build-ios-library.mjs`, called from `sync-content.sh`) in `ay2m/FlyGACA`
+  to copy `gacar-index.json` **and** the full `parts/` directory verbatim into
+  `Apps/FlyGACA/Content/regulations/` on every sync — the same "monorepo generates, this repo only
+  consumes the snapshot" rule every other content type already follows. Do **not** hand-author or
+  hand-refresh `regulations.json` again; a stale index with no generator is exactly the drift this
+  decision is closing. (`scripts/lib/flavor-slice.mjs`'s `CORPUS_FILES`/`collectCorpusRefs` is the
+  existing precedent for "which corpus HTML ships with which app" used by the Capacitor flavor
+  builds — the flagship doesn't need per-pack slicing since it ships the whole 74-part library, but
+  that file is the reference for how corpus-file resolution is already solved once in this family;
+  don't reinvent it.) Same audit finding applies to `airports.json` — confirm its generator (or add
+  one) rather than assume the committed snapshot stays correct by hand.
+- **[product] Port Tools from Captain Adel iOS.** `AviationToolsView.swift`'s METAR decoder and its
+  four FMC calculators (VFR fuel reserve, crosswind/headwind, density altitude, top-of-descent) are
+  real, tested formulas — port the math into `FlyGACAKit` (pure functions, likely alongside/inside
+  `FlightDeckToolsView`'s existing tool set, which today covers Cockpit HUD/ATC practice/weather but
+  not the FMC calculators specifically). Respect the layering rule: the calculators themselves are
+  pure (no IO, testable like `StudyEngines`), but a *live* METAR fetch is network IO and must live
+  in `PlatformLive`, called from `FeatureUI` through a protocol — not a direct `URLSession` call
+  inside the view, unlike Captain Adel iOS's flat-app `METARService.swift`.
+- **[product] Port the exam bank as a real content pack, not a parallel `QuizService`.** Captain
+  Adel iOS's 26-question GACAR bank has real bilingual content worth keeping, but it should become
+  a `quiz.json`-shaped bank consumed by FlyGACAKit's existing `CoreModels`/`StudyEngines`/
+  `QuizView` machinery (the same engine ELPT/AIP already use), not a second bespoke quiz
+  implementation living only in `FeatureUI`. Concretely: add the 26 questions as a bank in the
+  monorepo's content (either a new small pack, e.g. `gacar-general`, or folded into an existing
+  one — a `prepCatalog.ts` decision), then it flows through the flagship's Academics tab for free.
+
 ### Later
 
-- **[product] Full offline regulatory library.** `Content/regulations.json` today is a 34 KB
-  *index* (`generated`, `source`, `count`, `categories`, `documents` — titles/metadata, not full
-  text) and `airports.json` is real aerodrome data. Decide whether the flagship's "Library" tab
-  ships full offline GACAR text (bigger bundle, matches the web's promise) or stays an index that
-  deep-links into `flygaca.com` for the full text (smaller app, needs connectivity for reading).
-  This is a product-scope decision, not a technical blocker either way.
 - **[product] New modules keep landing as standalone apps, automatically.** No new engineering
   needed here — see "Wave 3 modules" above. The flagship's catalog and the standalone-app list are
   two different surfaces fed by the same monorepo pack catalog; adding a pack to `prepCatalog.ts`
   is enough for both to pick it up (flagship: a catalog entry; standalone: a new `project.yml`
   target, whenever that module is un-paused or launches new).
+- **[platform] Eventually retire Captain Adel iOS's own hand-typed corpus too.**
+  `GACARCorpusDatabase.swift` (Captain Adel iOS) is a *third* hand-copy of the same 74-part corpus,
+  just retyped into Swift source instead of JSON. Once the Library sync above exists, Captain
+  Adel's offline retrieval engine is the natural next thing to point at the same synced
+  `parts/`/`gacar-index.json` snapshot instead of its own copy — tracked in
+  `apps/captain-adel-ios/ROADMAP.md`, not blocking anything here.
 
 ## How we ship (Definition of Done)
 
